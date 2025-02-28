@@ -720,7 +720,7 @@ download_and_unpack_file() {
   fi
 }
 
-download_and_unzip() {
+download_unzip_to_prefix() {
   url="$1"
   output_name=$(basename $url)
   output_dir="$2"
@@ -927,8 +927,8 @@ build_libtiff() {
 
 build_libtensorflow() { 
    if [ ! -e Tensorflow ]; then 
-     download_and_unzip https://storage.googleapis.com/tensorflow/versions/2.18.0/libtensorflow-cpu-windows-x86_64.zip # tensorflow.dll required by ffmpeg to run
-     # download_and_unzip https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-gpu-windows-x86_64-2.10.0.zip # toggle for cpu/gpu 
+     download_unzip_to_prefix https://storage.googleapis.com/tensorflow/versions/2.18.0/libtensorflow-cpu-windows-x86_64.zip # tensorflow.dll required by ffmpeg to run
+     # download_unzip_to_prefix https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-gpu-windows-x86_64-2.10.0.zip # toggle for cpu/gpu 
      mkdir Tensorflow
    else echo "Tensorflow already done"
    fi
@@ -1477,7 +1477,8 @@ build_libopencore() {
 build_libilbc() {
   do_git_checkout https://github.com/TimothyGu/libilbc.git libilbc_git
   cd libilbc_git
-    generic_configure_make_install
+    do_cmake "-S . -B build -DCMAKE_INSTALL_PREFIX=$mingw_w64_x86_64_prefix -DBUILD_SHARED_LIBS=0 -GNinja"
+    do_ninja_and_ninja_install
   cd ..
 }
 
@@ -1714,7 +1715,7 @@ build_svt-av1() {
   cd SVT-AV1_git
     do_cmake "-S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_SYSTEM_PROCESSOR=AMD64 -DUNIX=OFF -DENABLE_AVX512=ON -GNinja"
     do_ninja_make_and_install
-  cd ../..
+  cd ..
 }
 
 build_vidstab() {
@@ -1803,7 +1804,6 @@ build_libsrt() {
 build_libass() {
   do_git_checkout_and_make_install https://github.com/libass/libass.git
 }
-
 
 build_vulkan() {
   do_git_checkout https://github.com/KhronosGroup/Vulkan-Headers.git
