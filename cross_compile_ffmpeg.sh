@@ -902,9 +902,9 @@ build_nv_headers() {
 }
 
 build_libvpl () {
-  do_git_checkout https://github.com/intel/libvpl.git libvpl_git v2.14.0
+  do_git_checkout https://github.com/intel/libvpl.git libvpl_git f8d9891
   cd libvpl_git
-    do_cmake "-S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$mingw_w64_x86_64_prefix -DBUILD_SHARED_LIBS=OFF -DBUILD_EXAMPLES=OFF -DINSTALL_DEV=OFF -DBUILD_EXPERIMENTAL=OFF -DUSE_MSVC_STATIC_RUNTIME=ON -GNinja"
+    do_cmake "-S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$mingw_w64_x86_64_prefix -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTS=OFF -DCMAKE_MSVC_RUNTIME_LIBRARY=OFF -DINSTALL_EXAMPLES=OFF -DINSTALL_DEV=ON -DBUILD_EXPERIMENTAL=OFF -GNinja" # builds complete but with several ffmpeg errors
     do_ninja_and_ninja_install
   cd ..
 }
@@ -993,7 +993,6 @@ build_lensfun() {
 
 build_flac () {
 	do_git_checkout https://github.com/xiph/flac.git flac_git 
-	mkdir flac_git/build
 	cd flac_git
 		do_cmake "-S . -B build -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_SYSTEM_PROCESSOR=AMD64 -DINSTALL_MANPAGES=OFF -GNinja"
 		do_ninja_and_ninja_install
@@ -1022,10 +1021,9 @@ build_libtesseract() {
       do_make_and_make_install
 	  sed -i.bak 's/Requires.private.*/& lept libarchive liblzma libtiff-4/' $PKG_CONFIG_PATH/tesseract.pc # needed
 	  sed -i 's/-ltesseract.*$/-ltesseract -larchive -lstdc++ -lws2_32 -lbz2 -lz -liconv -lpthread  -lgdi32 -lcrypt32/' $PKG_CONFIG_PATH/tesseract.pc # not sure all these are needed
-	  # sed -i 's/Libs.private.*/& -fopenmp -lgomp/' $PKG_CONFIG_PATH/tesseract.pc
 	  if [ ! -e $mingw_w64_x86_64_prefix/bin/tessdata/tessdata/eng.traineddata ]; then
 		 apt install tesseract-ocr-eng # sudo
-        cp -f /usr/share/tesseract-ocr/5/tessdata/eng.traineddata $mingw_w64_x86_64_prefix/bin/tessdata/ # needs tweaking to work on any distro and if want added languages
+                 cp -f /usr/share/tesseract-ocr/5/tessdata/eng.traineddata $mingw_w64_x86_64_prefix/bin/tessdata/ # needs tweaking to work on any distro and if want added languages
 	  fi
   cd ..
 }
@@ -1143,7 +1141,7 @@ build_libxml2() {
 }
 
 build_libvmaf() {
-  do_git_checkout https://github.com/Netflix/vmaf.git vmaf_git # some older distros will need additional apts installed
+  do_git_checkout https://github.com/Netflix/vmaf.git vmaf_git # Ubuntu >= 22 Debian >=11 for meson needed?
   cd vmaf_git
     cd libvmaf
     mkdir build
@@ -1711,11 +1709,12 @@ build_svt-vp9() {
 }
 
 build_svt-av1() {
-  do_git_checkout https://gitlab.com/AOMediaCodec/SVT-AV1.git SVT-AV1_git
+  do_git_checkout https://gitlab.com/AOMediaCodec/SVT-AV1.git SVT-AV1_git v2.3.0 # stick with the dinosaur for the win
   cd SVT-AV1_git
-    do_cmake "-S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_SYSTEM_PROCESSOR=AMD64 -DUNIX=OFF -DENABLE_AVX512=ON -GNinja"
-    do_ninja_make_and_install
-  cd ..
+    do_cmake "-S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_SYSTEM_PROCESSOR=x86_64 -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF" # OPTIMIZATION=OFF avoids many errors 'uname -m'=x86_64
+	cd build
+	  do_make_and_make_install
+ cd ../..
 }
 
 build_vidstab() {
