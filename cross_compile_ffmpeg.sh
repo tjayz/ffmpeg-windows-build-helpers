@@ -902,10 +902,14 @@ build_nv_headers() {
 }
 
 build_libvpl () {
-  do_git_checkout https://github.com/intel/libvpl.git libvpl_git f8d9891
+  do_git_checkout https://github.com/intel/libvpl.git libvpl_git f8d9891 # beyond this commit -lstdc++ no longer used and ffmpeg no longer sees it without it on the .pc
   cd libvpl_git
-    do_cmake "-S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$mingw_w64_x86_64_prefix -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTS=OFF -DCMAKE_MSVC_RUNTIME_LIBRARY=OFF -DINSTALL_EXAMPLES=OFF -DINSTALL_DEV=ON -DBUILD_EXPERIMENTAL=OFF -GNinja" # builds complete but with several ffmpeg errors
+	if [ "$bits_target" = "32" ]; then
+	  apply_patch "https://raw.githubusercontent.com/msys2/MINGW-packages/master/mingw-w64-libvpl/0003-cmake-fix-32bit-install.patch" -p1
+	fi
+    do_cmake "-S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$mingw_w64_x86_64_prefix -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTS=OFF -DCMAKE_MSVC_RUNTIME_LIBRARY=OFF -DINSTALL_EXAMPLES=OFF -DINSTALL_DEV=ON -DBUILD_EXPERIMENTAL=OFF -GNinja" # -map_metadata / -map_chapters -1 index broken from vpl possibly other things
     do_ninja_and_ninja_install
+    # gcc program.cpp `pkg-config --cflags --libs vpl`
   cd ..
 }
 
