@@ -25,7 +25,7 @@ yes_no_sel () {
 
 set_box_memory_size_bytes() {
   if [[ $OSTYPE == darwin* ]]; then
-    box_memory_size_bytes=20000000000 # 20G fake it out for now :|
+    box_memory_size_bytes=14272000000 # WSL default
   else
     local ram_kilobytes=`grep MemTotal /proc/meminfo | awk '{print $2}'`
     local swap_kilobytes=`grep SwapTotal /proc/meminfo | awk '{print $2}'`
@@ -901,15 +901,32 @@ build_nv_headers() {
   cd ..
 }
 
+build_intel_qsv_mfx() { # disableable via command line switch...
+  do_git_checkout https://github.com/lu-zero/mfx_dispatch.git mfx_dispatch_git 2cd279f # lu-zero?? oh well seems somewhat supported...
+  cd mfx_dispatch_git
+    if [[ ! -f "configure" ]]; then
+      autoreconf -fiv || exit 1
+      automake --add-missing || exit 1
+    fi
+    if [[ $compiler_flavors == "native" && $OSTYPE != darwin* ]]; then
+      unset PKG_CONFIG_LIBDIR # allow mfx_dispatch to use libva-dev or some odd on linux...not sure for OS X so just disable it :)
+      generic_configure_make_install
+      export PKG_CONFIG_LIBDIR=
+    else
+      generic_configure_make_install
+    fi
+  cd ..
+}
+
 build_libvpl () {
+ build_intel_qsv_mfx
   do_git_checkout https://github.com/intel/libvpl.git libvpl_git f8d9891 # beyond this commit -lstdc++ no longer used and ffmpeg no longer sees it without it on the .pc
   cd libvpl_git
 	if [ "$bits_target" = "32" ]; then
 	  apply_patch "https://raw.githubusercontent.com/msys2/MINGW-packages/master/mingw-w64-libvpl/0003-cmake-fix-32bit-install.patch" -p1
 	fi
-    do_cmake "-S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$mingw_w64_x86_64_prefix -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTS=OFF -DCMAKE_MSVC_RUNTIME_LIBRARY=OFF -DINSTALL_EXAMPLES=OFF -DINSTALL_DEV=ON -DBUILD_EXPERIMENTAL=OFF -GNinja" # -map_metadata / -map_chapters -1 index broken from vpl possibly other things
-    do_ninja_and_ninja_install
-    # gcc program.cpp `pkg-config --cflags --libs vpl`
+   	do_cmake "-S . -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$mingw_w64_x86_64_prefix -DBUILD_SHARED_LIBS=OFF -DINSTALL_EXAMPLES=OFF -DINSTALL_DEV=ON -DBUILD_EXPERIMENTAL=OFF" 
+  	do_ninja_and_ninja_install
   cd ..
 }
 
@@ -998,7 +1015,7 @@ build_lensfun() {
 build_flac () {
 	do_git_checkout https://github.com/xiph/flac.git flac_git 
 	cd flac_git
-		do_cmake "-S . -B build -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_SYSTEM_PROCESSOR=AMD64 -DINSTALL_MANPAGES=OFF -GNinja"
+		do_cmake "-S . -B build -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=Release -DINSTALL_MANPAGES=OFF -GNinja"
 		do_ninja_and_ninja_install
 	cd ..
 }
@@ -1024,10 +1041,10 @@ build_libtesseract() {
       generic_configure "--disable-openmp --with-archive --disable-graphics --disable-tessdata-prefix --without-curl LIBLEPT_HEADERSDIR=$mingw_w64_x86_64_prefix/include --datadir=$mingw_w64_x86_64_prefix/bin"
       do_make_and_make_install
 	  sed -i.bak 's/Requires.private.*/& lept libarchive liblzma libtiff-4/' $PKG_CONFIG_PATH/tesseract.pc # needed
-	  sed -i 's/-ltesseract.*$/-ltesseract -larchive -lstdc++ -lws2_32 -lbz2 -lz -liconv -lpthread  -lgdi32 -lcrypt32/' $PKG_CONFIG_PATH/tesseract.pc # not sure all these are needed
+	  sed -i 's/-ltesseract.*$/-ltesseract -lstdc++ -lws2_32 -lbz2 -lz -liconv -lpthread  -lgdi32 -lcrypt32/' $PKG_CONFIG_PATH/tesseract.pc # not sure all these are needed
 	  if [ ! -e $mingw_w64_x86_64_prefix/bin/tessdata/tessdata/eng.traineddata ]; then
 		 apt install tesseract-ocr-eng # sudo
-                 cp -f /usr/share/tesseract-ocr/5/tessdata/eng.traineddata $mingw_w64_x86_64_prefix/bin/tessdata/ # needs tweaking to work on any distro and if want added languages
+        cp -f /usr/share/tesseract-ocr/5/tessdata/eng.traineddata $mingw_w64_x86_64_prefix/bin/tessdata/ # needs tweaking to work on any distro and if want added languages
 	  fi
   cd ..
 }
@@ -1698,7 +1715,7 @@ build_svt-hevc() {
   do_git_checkout https://github.com/OpenVisualCloud/SVT-HEVC.git
   mkdir -p SVT-HEVC_git/release
   cd SVT-HEVC_git/release
-    do_cmake_from_build_dir .. "-DCMAKE_BUILD_TYPE=Release -DCMAKE_SYSTEM_PROCESSOR=AMD64"
+    do_cmake_from_build_dir .. "-DCMAKE_BUILD_TYPE=Release -DCMAKE_SYSTEM_PROCESSOR=amd64"
     do_make_and_make_install
   cd ../..
 }
@@ -1707,7 +1724,7 @@ build_svt-vp9() {
   do_git_checkout https://github.com/OpenVisualCloud/SVT-VP9.git
   cd SVT-VP9_git
   cd Build
-    do_cmake_from_build_dir .. "-DCMAKE_BUILD_TYPE=Release -DCMAKE_SYSTEM_PROCESSOR=AMD64"
+    do_cmake_from_build_dir .. "-DCMAKE_BUILD_TYPE=Release -DCMAKE_SYSTEM_PROCESSOR=amd64"
     do_make_and_make_install
   cd ../..
 }
@@ -1715,10 +1732,9 @@ build_svt-vp9() {
 build_svt-av1() {
   do_git_checkout https://gitlab.com/AOMediaCodec/SVT-AV1.git SVT-AV1_git v2.3.0 # stick with the dinosaur for the win
   cd SVT-AV1_git
-    do_cmake "-S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_SYSTEM_PROCESSOR=x86_64 -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF" # OPTIMIZATION=OFF avoids many errors 'uname -m'=x86_64
-	cd build
-	  do_make_and_make_install
- cd ../..
+    do_cmake "-S . -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_SYSTEM_PROCESSOR=amd64 -DENABLE_AVX512=ON -DBUILD_APPS=ON -DSVT_AV1_PGO=ON -DSVT_AV1_LTO=ON" #disable app for master or take v2.3.0 with app
+    do_ninja_and_ninja_install
+ cd ..
 }
 
 build_vidstab() {
@@ -2583,11 +2599,6 @@ build_ffmpeg() {
           git apply "$work_dir/SVT-VP9_git/ffmpeg_plugin/master-0001-Add-ability-for-ffmpeg-to-run-svt-vp9.patch"
         fi
         config_options+=" --enable-libsvtvp9"
-      fi
-      # SVT-AV1
-      # Apply patch on newer versions
-      if [[ $ffmpeg_git_checkout_version != *"n6"* ]] && [[ $ffmpeg_git_checkout_version != *"n5"* ]] && [[ $ffmpeg_git_checkout_version != *"n4"* ]] && [[ $ffmpeg_git_checkout_version != *"n3"* ]] && [[ $ffmpeg_git_checkout_version != *"n2"* ]]; then
-        git apply "$work_dir/SVT-AV1_git/.gitlab/workflows/linux/ffmpeg_n7_fix.patch"
       fi  
       config_options+=" --enable-libsvtav1"
     fi # else doesn't work/matter with 32 bit
@@ -2629,7 +2640,7 @@ build_ffmpeg() {
     fi
     
     if [[ $enable_gpl == 'y' ]]; then
-      config_options+=" --enable-gpl --enable-frei0r --enable-librubberband --enable-libvidstab --enable-libx264 --enable-libx265 --enable-avisynth --enable-libaribb24"
+      config_options+=" --enable-gpl --enable-frei0r --enable-librubberband --enable-libvidstab --enable-libx264 --enable-libx265 --enable-avisynth --enable-libaribb24" 
       config_options+=" --enable-libxvid --enable-libdavs2"
       if [[ $host_target != 'i686-w64-mingw32' ]]; then
         config_options+=" --enable-libxavs2"
@@ -2963,7 +2974,7 @@ prefer_stable=y # Only for x264 and x265.
 build_intel_qsv=y # libvpl 
 build_amd_amf=y
 disable_nonfree=y # comment out to force user y/n selection
-original_cflags='-mtune=generic -O3' # high compatible by default, see #219, some other good options are listed below, or you could use -march=native to target your local box:
+original_cflags='-mtune=generic -O3 -pipe' # high compatible by default, see #219, some other good options are listed below, or you could use -march=native to target your local box:
 original_cppflags='-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3' # Needed for mingw-w64 7 as FORTIFY_SOURCE is now partially implemented, but not actually working
 # if you specify a march it needs to first so x264's configure will use it :| [ is that still the case ?]
 # original_cflags='-mtune=generic -O3'
