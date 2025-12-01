@@ -1,4 +1,4 @@
-FROM --platform=amd64 ubuntu:20.04
+FROM --platform=amd64 ubuntu:22.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -30,9 +30,12 @@ RUN apt-get update && \
     bzip2 \
     autoconf-archive \
     p7zip-full \
-    meson \
     clang \
-    python \
+    autopoint \
+    bc \
+    ninja-build \
+    python3-venv \
+    python-is-python3 \
     python3-setuptools \
     wget \
     ed
