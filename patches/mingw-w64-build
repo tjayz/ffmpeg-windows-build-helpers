@@ -16,11 +16,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-ROOT_PATH=$(pwd)
+ROOT_PATH=$HOME/sandbox
 
-# MINGW_W64_BRANCH="master"
-# BINUTILS_BRANCH="binutils-2_44-branch"
-# GCC_BRANCH="releases/gcc-14"
+MINGW_W64_URL="https://git.code.sf.net/p/mingw-w64/mingw-w64"
+MINGW_W64_BRANCH="master"
+BINUTILS_URL="https://sourceware.org/git/binutils-gdb.git"
+BINUTILS_BRANCH="master"
+GCC_URL="https://gcc.gnu.org/git/gcc.git"
+# GCC_BRANCH="releases/gcc-15"
 WIN32_WINNT="0x0A00"
 
 ENABLE_THREADS="--enable-threads=posix"
@@ -48,8 +51,11 @@ Options:
   --keep-artifacts             don't remove source and build files after a successful build
   --disable-threads            disable pthreads and STL <thread>
   --cached-sources             use existing sources instead of downloading new ones
+  --binutils-url <url>         set Binutils URL (default: $BINUTILS_URL)
   --binutils-branch <branch>   set Binutils branch (default: $BINUTILS_BRANCH)
+  --gcc-url <url>              set GCC URL (default: $GCC_URL)
   --gcc-branch <branch>        set GCC branch (default: $GCC_BRANCH)
+  --mingw-w64-url <url>        set MinGW-w64 url (default: $MINGW_W64_URL)
   --mingw-w64-branch <branch>  set MinGW-w64 branch (default: $MINGW_W64_BRANCH)
   --linked-runtime <runtime>   set MinGW Linked Runtime (default: $LINKED_RUNTIME)
   --win32-winnt <version>      set default _WIN32_WINNT value (default: $WIN32_WINNT)
@@ -131,18 +137,27 @@ download_sources()
     create_dir "$SRC_PATH"
     change_dir "$SRC_PATH"
 
-    execute "downloading MinGW-w64 source" "" \
+    execute "downloading MinGW-w64 source" "unable to clone MinGW-w64, override the URL with: --mingw-w64-url <url>" \
         git clone --depth 1 -b "$MINGW_W64_BRANCH" \
-            https://git.code.sf.net/p/mingw-w64/mingw-w64 mingw-w64
+            "$MINGW_W64_URL" mingw-w64
 
-    execute "downloading Binutils source" "" \
+    execute "downloading Binutils source" "unable to clone Binutils, to use the official mirror: --binutils-url 'https://git.sr.ht/~sourceware/binutils-gdb'" \
         git clone --depth 1 -b "$BINUTILS_BRANCH" \
-            https://sourceware.org/git/binutils-gdb.git binutils
+            "$BINUTILS_URL" binutils
 
-    execute "downloading GCC source" "" \
+    execute "downloading GCC source" "unable to clone GCC, to use the official mirror: --gcc-url 'https://git.sr.ht/~sourceware/gcc'" \
         git clone --depth 1 -b "$GCC_BRANCH" \
-            https://gcc.gnu.org/git/gcc.git gcc
-
+            "$GCC_URL" gcc
+		    sed -i "s/gmp-6.2.1.*/gmp-6.3.0.tar.bz2'/" $SRC_PATH/gcc/contrib/download_prerequisites
+		    sed -i "s/mpfr-4.1.0.*/mpfr-4.2.2.tar.bz2'/" $SRC_PATH/gcc/contrib/download_prerequisites
+		    sed -i "s/mpc-1.2.1.*/mpc-1.3.1.tar.gz'/" $SRC_PATH/gcc/contrib/download_prerequisites			              
+		    sed -i "s/28971fc21cf028042d4897f02fd355ea  gmp-6.2.1.*/c1cd6ef33085e9cb818b9b08371f9000  gmp-6.3.0.tar.bz2/" $SRC_PATH/gcc/contrib/prerequisites.md5
+		    sed -i "s/44b892bc5a45bafb4294d134e13aad1d  mpfr-4.1.0.*/afe8268360bc8702fbc8297d351c8b5e  mpfr-4.2.2.tar.bz2/" $SRC_PATH/gcc/contrib/prerequisites.md5
+		    sed -i "s/9f16c976c25bb0f76b50be749cd7a3a8  mpc-1.2.1.*/5c9bc658c9fd0f940e8e3e0f09530c62  mpc-1.3.1.tar.gz/" $SRC_PATH/gcc/contrib/prerequisites.md5
+		    sed -i "s/8904334a3bcc5c896ececabc75cda9dec642e401fb5397c4992c4fabea5e962c9ce8bd44e8e4233c34e55c8010cc28db0545f5f750cbdbb5f00af538dc763be9  gmp-6.2.1.*/3b684c9bcb9ede2b7e54d0ba4c9764bfa17c20d4f3000017c553b6f1e135b536949580ff37341680c25dc236cfe0ba1db8cfdfe619ce013656189ef0871b89f8  gmp-6.3.0.tar.bz2/" $SRC_PATH/gcc/contrib/prerequisites.sha512
+		    sed -i "s/410208ee0d48474c1c10d3d4a59decd2dfa187064183b09358ec4c4666e34d74383128436b404123b831e585d81a9176b24c7ced9d913967c5fce35d4040a0b4  mpfr-4.1.0.*/0176e50808dcc07afbf5bc3e38bf9b7b21918e5f194aa0bfd860d99b00c470630aef149776c4be814a61c44269c3a5b9a4b0b1c0fcd4c9feb1459d8466452da8  mpfr-4.2.2.tar.bz2/" $SRC_PATH/gcc/contrib/prerequisites.sha512
+		    sed -i "s/3279f813ab37f47fdcc800e4ac5f306417d07f539593ca715876e43e04896e1d5bceccfb288ef2908a3f24b760747d0dbd0392a24b9b341bc3e12082e5c836ee  mpc-1.2.1.*/4bab4ef6076f8c5dfdc99d810b51108ced61ea2942ba0c1c932d624360a5473df20d32b300fc76f2ba4aa2a97e1f275c9fd494a1ba9f07c4cb2ad7ceaeb1ae97  mpc-1.3.1.tar.gz/" $SRC_PATH/gcc/contrib/prerequisites.sha512
+  
     execute "downloading config.guess" "" \
         curl -o config.guess \
             "https://gitweb.git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD"
@@ -179,7 +194,8 @@ build()
     execute "($arch): configuring Binutils" "" \
         "$SRC_PATH/binutils/configure" --prefix="$prefix" --disable-shared \
             --enable-static --with-sysroot="$prefix" --target="$host" \
-            --disable-multilib --disable-nls --enable-lto --disable-gdb
+            --disable-multilib --disable-nls --enable-lto --disable-gdb	 
+		  # --enable-warn-execstack --enable-warn-rwx-segments --enable-textrel-check=warn  --enable-relro --disable-default-execstack
 
     execute "($arch): building Binutils" "" \
         make -j $JOB_COUNT
@@ -192,7 +208,7 @@ build()
 
     execute "($arch): configuring MinGW-w64 headers" "" \
         "$SRC_PATH/mingw-w64/mingw-w64-headers/configure" --build="$BUILD" \
-            --host="$host" --prefix="$prefix/$host" \
+            --host="$host" --prefix="$prefix/$host" --enable-sdk=all \
             --with-default-win32-winnt=$WIN32_WINNT \
             --with-default-msvcrt=$LINKED_RUNTIME
 
@@ -205,8 +221,9 @@ build()
     execute "($arch): configuring GCC" "" \
         "$SRC_PATH/gcc/configure" --target="$host" --disable-shared \
             --enable-static --disable-multilib --prefix="$prefix" \
-            --enable-languages=c,c++ --disable-nls $ENABLE_THREADS \
-            $x86_dwarf2
+            --enable-languages=c,c++,fortran --disable-nls $ENABLE_THREADS \
+            $x86_dwarf2 --enable-libgomp 
+		  # --enable-host-pie --enable-default-pie --enable-host-bind-now --enable-fully-dynamic-string --enable-default-ssp --with-included-gettext 
 
     execute "($arch): building GCC (all-gcc)" "" \
         make -j $JOB_COUNT all-gcc
@@ -302,7 +319,21 @@ while :; do
         --cached-sources)
             CACHED_SOURCES=1
             ;;
-        --binutils-branch)
+        --binutils-url)
+            if [ "$2" ]; then
+                BINUTILS_URL="$2"
+                shift
+            else
+                arg_error "'--binutils-url' requires a non-empty option argument"
+            fi
+            ;;
+        --binutils-url=?*)
+            BINUTILS_URL=${1#*=}
+            ;;
+        --binutils-url=)
+            arg_error "'--binutils-url' requires a non-empty option argument"
+            ;;
+        --binutils-url)
             if [ "$2" ]; then
                 BINUTILS_BRANCH="$2"
                 shift
@@ -315,6 +346,20 @@ while :; do
             ;;
         --binutils-branch=)
             arg_error "'--binutils-branch' requires a non-empty option argument"
+            ;;
+        --gcc-url)
+            if [ "$2" ]; then
+                GCC_URL="$2"
+                shift
+            else
+                arg_error "'--gcc-url' requires a non-empty option argument"
+            fi
+            ;;
+        --gcc-url=?*)
+            GCC_URL=${1#*=}
+            ;;
+        --gcc-url=)
+            arg_error "'--gcc-url' requires a non-empty option argument"
             ;;
         --gcc-branch)
             if [ "$2" ]; then
@@ -343,6 +388,20 @@ while :; do
             ;;
         --linked-runtime=)
             arg_error "'--linked-runtime' requires a non-empty option argument"
+            ;;
+        --mingw-w64-url)
+            if [ "$2" ]; then
+                MINGW_W64_URL="$2"
+                shift
+            else
+                arg_error "'--mingw-w64-url' requires a non-empty option argument"
+            fi
+            ;;
+        --mingw-w64-url=?*)
+            MINGW_W64_URL=${1#*=}
+            ;;
+        --mingw-w64-url=)
+            arg_error "'--mingw-w64-url' requires a non-empty option argument"
             ;;
         --mingw-w64-branch)
             if [ "$2" ]; then
@@ -443,9 +502,9 @@ if [ "$PREFIX" ]; then
     I686_PREFIX="$PREFIX"
     X86_64_PREFIX="$PREFIX"
 else
-    I586_PREFIX="$ROOT_PATH/mingw-w64-i586"
-    I686_PREFIX="$ROOT_PATH/mingw-w64-i686"
-    X86_64_PREFIX="$ROOT_PATH/mingw-w64-x86_64"
+    I586_PREFIX="$ROOT_PATH/i586"
+    I686_PREFIX="$ROOT_PATH/i686"
+    X86_64_PREFIX="$ROOT_PATH/x86_64"
 fi
 
 CURRENT_STEP=1
@@ -476,8 +535,8 @@ for i in mpc isl mpfr gmp; do
     ln -s "$SRC_PATH/gcc/$i" "$SRC_PATH/binutils/$i"
 done
 
-export CFLAGS="-g0"
-export CXXFLAGS="-g0"
+export CFLAGS="-g0 -pipe"
+export CXXFLAGS="-g0 -pipe"
 export LDFLAGS="-s"
 
 ADD_TO_PATH=()
@@ -498,7 +557,7 @@ if [ "$BUILD_X86_64" ]; then
 fi
 
 if [ ! "$KEEP_ARTIFACTS" ]; then
-    remove_path "$SRC_PATH"
+    #remove_path "$SRC_PATH"
     remove_path "$BLD_PATH"
     remove_path "$LOG_FILE"
 fi
