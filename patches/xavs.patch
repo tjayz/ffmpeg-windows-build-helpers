@@ -1,0 +1,76 @@
+From 8ca9fc742b06674fd2c61e61b1709b81445ce686 Mon Sep 17 00:00:00 2001
+From: Christopher Degawa <ccom@randomderp.com>
+Date: Fri, 4 Sep 2020 04:13:43 +0000
+Subject: [PATCH 1/2] common/i386/predict-c.c: Don't use a list initializer in
+ the declaration
+
+Signed-off-by: Christopher Degawa <ccom@randomderp.com>
+---
+ common/i386/predict-c.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/common/i386/predict-c.c b/common/i386/predict-c.c
+index 6086692..3b6e43a 100644
+--- a/common/i386/predict-c.c
++++ b/common/i386/predict-c.c
+@@ -3,7 +3,7 @@
+  *****************************************************************************
+  * Copyright (C) 2009 xavs project
+  *
+- * Authors: 
++ * Authors:
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+@@ -31,7 +31,7 @@ extern void predict_8x8c_dc_left_mmxext( uint8_t *src,int i_neighbor );
+ extern void predict_8x8c_dc_mmxext( uint8_t *src,int i_neighbor );
+ extern void predict_8x8c_v_mmxext( uint8_t *src, int i_neighbor );
+ extern void predict_8x8c_dc_top_mmxext( uint8_t *src,int i_neighbor );
+-extern void predict_8x8c_p_core_mmxext( src, i00, b, c );
++extern void predict_8x8c_p_core_mmxext( uint8_t *src, int i00, int b, int c );
+ extern void predict_8x8_h_mmxext( uint8_t *src, int i_neighbor );
+ extern void predict_8x8_v_mmxext( uint8_t *src, int i_neighbor );
+ extern void predict_8x8_dc_128_mmxext( uint8_t *src, int i_neighbor );
+
+From 8b9bca5d2ca730ef38a421aaa2a39adcc9315d1d Mon Sep 17 00:00:00 2001
+From: Christopher Degawa <ccom@randomderp.com>
+Date: Thu, 20 Oct 2022 11:59:46 -0500
+Subject: [PATCH 2/2] xavs_add16x16_idct8_sse2: fix 4th arg to
+ xavs_add8x8_idct8_sse2
+
+xavs_add8x8_idct8_sse2 is declared with the last arg as a pointer, but
+xavs_add16x16_idct8_sse2 passes a plain uint16_t to it
+
+Signed-off-by: Christopher Degawa <ccom@randomderp.com>
+---
+ common/i386/dct-c.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/common/i386/dct-c.c b/common/i386/dct-c.c
+index 18b8614..2d27b2a 100644
+--- a/common/i386/dct-c.c
++++ b/common/i386/dct-c.c
+@@ -69,7 +69,7 @@ void x264_add16x16_idct_mmx( uint8_t *p_dst, int16_t dct[16][4][4] )
+     x264_add8x8_idct_mmx( &p_dst[0],               &dct[0] );
+     x264_add8x8_idct_mmx( &p_dst[8],               &dct[4] );
+     x264_add8x8_idct_mmx( &p_dst[8*FDEC_STRIDE],   &dct[8] );
+-    x264_add8x8_idct_mmx( &p_dst[8*FDEC_STRIDE+8], &dct[12] );                      idctµƒmmx≤ø∑÷
++    x264_add8x8_idct_mmx( &p_dst[8*FDEC_STRIDE+8], &dct[12] );                      idctùùmmxùùùù
+ }
+ */
+ /***********************
+@@ -115,10 +115,10 @@ extern void xavs_add16x16_idct8_sse2(uint8_t *dst, int16_t dct[4][8][8],int16_t
+ 
+ void xavs_add16x16_idct8_sse2( uint8_t *p_dst, int16_t dct[4][8][8],int16_t *tmp )
+ {
+-    xavs_add8x8_idct8_sse2( p_dst,                 dct[0] , tmp[0]);
+-    xavs_add8x8_idct8_sse2( p_dst+8,               dct[1] , tmp[1]);
+-    xavs_add8x8_idct8_sse2( p_dst+8*FDEC_STRIDE,   dct[2] , tmp[2]);
+-    xavs_add8x8_idct8_sse2( p_dst+8*FDEC_STRIDE+8, dct[3] , tmp[3]);                 
++    xavs_add8x8_idct8_sse2( p_dst,                 dct[0] , &tmp[0]);
++    xavs_add8x8_idct8_sse2( p_dst+8,               dct[1] , &tmp[1]);
++    xavs_add8x8_idct8_sse2( p_dst+8*FDEC_STRIDE,   dct[2] , &tmp[2]);
++    xavs_add8x8_idct8_sse2( p_dst+8*FDEC_STRIDE+8, dct[3] , &tmp[3]);
+ }
+ 
+ //#else // ARCH_X86
