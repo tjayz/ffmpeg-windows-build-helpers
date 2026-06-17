@@ -138,7 +138,7 @@ check_missing_packages () {
     exit 1
   fi
 
-  export REQUIRED_CMAKE_VERSION="3..0.0"
+  export REQUIRED_CMAKE_VERSION="3.0.0"
   for cmake_binary in 'cmake' 'cmake3'; do
     # We need to check both binaries the same way because the check for installed packages will work if *only* cmake3 is installed or
     # if *only* cmake is installed.
@@ -1047,11 +1047,7 @@ build_libleptonica() {
   cd leptonica_git
     generic_configure "--disable-programs CPPFLAGS=-DOPJ_STATIC"
     do_make_and_make_install
-    # do_cmake "-B build -GNinja -DSW_BUILD=0 -DSYM_LINK=0 -DBUILD_PROG=0 -DSTRICT_CONF=1 -DCMAKE_SYSTEM_NAME=MSYS -DENABLE_TIFF=OFF -DENABLE_OPENJPEG=0 -DENABLE_WEBP=0 -DENABLE_JPEG=0 -DENABLE_GIF=0 -DENABLE_PNG=0 -DENABLE_ZLIB=0"
-    # do_ninja_and_ninja_install
-    #mv $PKG_CONFIG_PATH/lept_Release.pc $PKG_CONFIG_PATH/lept.pc
     sed -i.bak 's/libopenjp2.*/libopenjp2 libwebpdecoder libwebpdemux libsharpyuv/' $PKG_CONFIG_PATH/lept.pc
-	#  INTERFACE_LINK_LIBRARIES "/home/tim/sandbox/x86_64/x86_64-w64-mingw32/lib/libgif.a;/home/tim/sandbox/x86_64/x86_64-w64-mingw32/lib/libjpeg.a;\$<LINK_ONLY:openjp2>;/home/tim/sandbox/x86_64/x86_64-w64-mingw32/lib/libpng.a;/home/tim/sandbox/x86_64/x86_64-w64-mingw32/lib/libz.a;\$<LINK_ONLY:webp>;\$<LINK_ONLY:webpmux>;\$<LINK_ONLY:webpdecoder>;\$<LINK_ONLY:webpdemux>;\$<LINK_ONLY:sharpyuv>;/home/tim/sandbox/x86_64/x86_64-w64-mingw32/lib/libz.a;\$<LINK_ONLY:m>"
   cd ..
 }
 
@@ -1080,16 +1076,8 @@ build_libtiff() {
     generic_configure "--disable-cxx --disable-tests --disable-tools --disable-contrib --disable-docs --disable-sphinx"
     do_make_and_make_install
   cd ..
-  # sed -i.bak 's/-ltiff.*$/-ltiff -llzma -ljpeg -lz/' $PKG_CONFIG_PATH/libtiff-4.pc # static deps
-  # download_and_unpack_file http://download.osgeo.org/libtiff/tiff-4.7.1.tar.gz
-  # cd tiff-4.7.1
-    # # apply_patch "https://raw.githubusercontent.com/m-ab-s/mabs-patches/master/libtiff/0001-tiffgt-Link-winmm-if-windows.patch" -p1
-    # # apply_patch "https://raw.githubusercontent.com/m-ab-s/mabs-patches/master/libtiff/0002-tiffgt-link-gl-after-glut.patch" -p1
-    # do_cmake "-B build -GNinja -Dtiff-tests=0 -Dtiff-docs=0 -Dtiff-tools=0 -Dtiff-contrib=0 -Dtiff-static=1"
-    # do_ninja_and_ninja_install
-    # # rm -r $x86_64_prefix/lib/cmake/tiff
     sed -i.bak 's/libzstd.*/libzstd libwebp libsharpyuv libpng libpng16 libturbojpeg glut /' $PKG_CONFIG_PATH/libtiff-4.pc
-	sed -i 's/-lm.*/-lm -lopengl32/' $PKG_CONFIG_PATH/libtiff-4.pc
+    sed -i 's/-lm.*/-lm -lopengl32/' $PKG_CONFIG_PATH/libtiff-4.pc
     sed -i 's/-I${includedir}.*/-I${includedir} -DFREEGLUT_STATIC/' $PKG_CONFIG_PATH/libtiff-4.pc
   #cd ..
 }
@@ -1100,12 +1088,10 @@ build_libtesseract() {
   build_libarchive
   do_git_checkout https://github.com/tesseract-ocr/tesseract.git tesseract_git
   cd tesseract_git
-     #export OMP_THREAD_LIMIT=2
 	sed -i.bak 's/Ws2_32} ${LIB_pthread}).*/ws2_32} ${LIB_pthread})/' CMakeLists.txt
 	sed -i 's/Ws2_32 Ws2_32).*/ws2_32 ws2_32)/' CMakeLists.txt
     generic_configure "--enable-openmp --with-archive --disable-graphics --disable-tessdata-prefix --with-curl LIBLEPT_HEADERSDIR=$x86_64_prefix/include --datadir=$x86_64_prefix/bin CPPFLAGS=-DCURL_STATICLIB"
     do_make_and_make_install
-    #unset OMP_THREAD_LIMIT
     sed -i.bak 's/lept.*/lept libarchive liblzma libtiff-4 libcurl/' $PKG_CONFIG_PATH/tesseract.pc
     sed -i 's/-lnghttp2.*/-lnghttp2 -lstdc++/' $PKG_CONFIG_PATH/tesseract.pc
     sed -i 's/-lpthread.*/-pthread -lgomp/' $PKG_CONFIG_PATH/tesseract.pc
@@ -1187,15 +1173,10 @@ build_libwebp() {
   do_git_checkout https://chromium.googlesource.com/webm/libwebp.git libwebp_git
   cd libwebp_git
     export LIBPNG_CONFIG="$x86_64_prefix/bin/libpng-config --static" # LibPNG somehow doesn't get autodetected
-    # do_cmake "-B build -GNinja -DWEBP_ENABLE_SWAP_16BIT_CSP=1 -DWEBP_ENABLE_SIMD=1 -DWEBP_LINK_STATIC=1"
-    # do_ninja_and_ninja_install
     generic_configure "--disable-wic"
     do_make_and_make_install
     unset LIBPNG_CONFIG
     sed -i.bak 's/-I${includedir}.*/-I${includedir} -DFREEGLUT_STATIC/' $PKG_CONFIG_PATH/lib{webp,webpmux,webpdemux,webpdecoder,sharpyuv}.pc
-    # mkdir $x86_64_prefix/lib/cmake/WebP
-    # cp build/CMakeFiles/Export/*/WebP* $x86_64_prefix/lib/cmake/WebP
-    # cp WebPConfig* $x86_64_prefix/lib/cmake/WebP
   cd ..
 }
 
@@ -1588,7 +1569,7 @@ build_whisper() {
       local config_options="1" 
     else
       local config_options="0" 
-    fi # opencl meant for mobiles with adreno; vulkan, blas, cpu backends seem to all work together in ffmpeg, careful with march native/cpu specific flags in blas/whisper/ffmpeg break functionality even if GGML_NATIVE=0, blas requires cpu backend to work in all tests tried and openmp enabled on both whisper and blas cuts speed in half
+    fi # opencl meant for mobiles with adreno; vulkan, blas, cpu backends seem to all work together in ffmpeg, careful with march native/cpu specific flags in blas/whisper/ffmpeg break functionality even if GGML_NATIVE=0, blas requires cpu backend to work in all tests tried
     do_cmake "-B build -GNinja -DGGML_OPENMP=0 -DGGML_CCACHE=0 -DGGML_BLAS=1 -DGGML_BLAS_VENDOR=OpenBLAS -DGGML_CUDA=0 -DGGML_VULKAN="$config_options" -DGGML_VULKAN_VALIDATE=0 -DGGML_OPENCL=0 -DGGML_OPENCL_USE_ADRENO_KERNELS=0\
 	-DWHISPER_BUILD_EXAMPLES=1 -DWHISPER_BUILD_TESTS=0 -DWHISPER_USE_SYSTEM_GGML=0 -DGGML_STATIC=1 -DGGML_CPU=1 -DGGML_NATIVE=1" # -DWHISPER_SDL2=1 -DSDL2_DIR=$x86_64_prefix/lib/cmake/SDL2" # needed to build all examples 
     do_ninja_and_ninja_install
@@ -1825,7 +1806,7 @@ build_svt-av1() {
 build_vidstab() {
   do_git_checkout https://github.com/georgmartius/vid.stab.git vid.stab_git
   cd vid.stab_git
-    do_cmake_and_install "-DUSE_OMP=1" # '-DUSE_OMP' is on by default, but somehow libgomp ('cygwin_local_install/lib/gcc/i686-pc-cygwin/5.4.0/include/omp.h') can't be found, so '-DUSE_OMP=0' to prevent a compilation error.
+    do_cmake_and_install "-DUSE_OMP=1"
   cd ..
 }
 
@@ -2754,7 +2735,7 @@ build_ffmpeg() {
     config_options+=" --enable-opengl"
     config_options+=" --enable-sdl2"
     if [[ $OSTYPE != darwin* ]]; then
-      config_options+=" --enable-vulkan" 
+      config_options+=" --enable-vulkan"
     fi
     config_options+=" --enable-whisper"
     config_options+=" --enable-zlib"
@@ -2996,7 +2977,7 @@ build_ffmpeg_dependencies() {
     build_libvpl
   fi
   build_nv_headers
-  install_cudatoolkit # v13.1
+  install_cudatoolkit # v13.3
   build_libzimg # Uses dlfcn.
   build_libopenjpeg
   build_glew
