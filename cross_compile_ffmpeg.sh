@@ -1547,9 +1547,9 @@ install_cudatoolkit() {
 build_blas() {
   do_git_checkout https://github.com/OpenMathLib/OpenBLAS OpenBLAS_git cf62771
   cd OpenBLAS_git # match your cpu in targetlists.txt and change -DTARGET accordingly 
-     do_cmake "-B build -GNinja -DBUILD_STATIC_LIBS=1 -DUSE_OPENMP=1 -DNUM_PARALLEL=$core_count -DBUILD_TESTING=0 -DBUILD_BENCHMARKS=0 -DTARGET=ZEN -DBUILD_RELAPACK=1 -DUSE_LOCKING=1\
-      -DUSE_THREAD=1 -DNUM_THREADS=1 -DOpenMP_Fortran_LIB_NAMES="gomp"  -DOpenMP_C_LIB_NAMES="gomp" -DOpenMP_gomp_LIBRARY=$x86_64_prefix/lib/libgomp.a "
-	do_ninja_and_ninja_install
+    do_cmake "-B build -GNinja -DBUILD_STATIC_LIBS=1 -DUSE_OPENMP=1 -DBUILD_TESTING=0 -DBUILD_BENCHMARKS=0 -DTARGET=ZEN -DBUILD_RELAPACK=1 -DUSE_LOCKING=1\
+      -DUSE_THREAD=1 -DNUM_THREADS=$core_count -DOpenMP_Fortran_LIB_NAMES="gomp" -DOpenMP_C_LIB_NAMES="gomp" -DOpenMP_gomp_LIBRARY=$x86_64_prefix/lib/libgomp.a "
+	do_ninja_and_ninja_install #  -DNUM_PARALLEL=$core_count 
     sed -i.bak 's/-l${libnameprefix}openblas${libnamesuffix}${libsuffix}.*/-lopenblas\nLibs.private: -lgfortran -lgomp -lpthread -lm/' $PKG_CONFIG_PATH/openblas*.pc
   cd ..
 }
