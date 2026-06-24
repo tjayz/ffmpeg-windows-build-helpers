@@ -2159,7 +2159,7 @@ build_libx265() {
       do_git_checkout "$remote" $checkout_dir "origin/master"
     fi
     if [[ $prefer_stable = "y" ]]; then
-      do_git_checkout "$remote" $checkout_dir "origin/stable"
+      do_git_checkout "$remote" $checkout_dir "4.2"
     fi
   fi
   cd $checkout_dir
