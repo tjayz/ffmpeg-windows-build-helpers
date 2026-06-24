@@ -1547,10 +1547,10 @@ install_cudatoolkit() {
 build_blas() {
   do_git_checkout https://github.com/OpenMathLib/OpenBLAS OpenBLAS_git cf62771
   cd OpenBLAS_git ### match your cpu in targetlists.txt and change -DTARGET accordingly ###
-    do_cmake "-B build -GNinja -DTARGET=ZEN -DBUILD_STATIC_LIBS=1 -DUSE_OPENMP=1 -DNUM_PARALLEL=$core_count -DBUILD_TESTING=0 -DBUILD_BENCHMARKS=0 -DBUILD_RELAPACK=1\
-       -DBUILD_LAPACK_DEPRECATED=0 -DUSE_THREAD=1 -DUSE_LOCKING=1 -DGEMM_MULTITHREAD_THRESHOLD=$core_count -DBUILD_BFLOAT16=1"
-	do_ninja_and_ninja_install
-    sed -i.bak 's/-l${libnameprefix}openblas${libnamesuffix}${libsuffix}.*/-lopenblas\nLibs.private: -lgfortran -lgomp -lpthread -lm/' $PKG_CONFIG_PATH/openblas*.pc
+    do_cmake "-B build -GNinja -DTARGET=ZEN -DBUILD_STATIC_LIBS=1 -DUSE_OPENMP=1 -DBUILD_TESTING=0 -DBUILD_BENCHMARKS=0 -DBUILD_RELAPACK=1\
+       -DBUILD_LAPACK_DEPRECATED=0 -DUSE_THREAD=1 -DUSE_LOCKING=0 -DGEMM_MULTITHREAD_THRESHOLD=$core_count -DBUILD_BFLOAT16=1"
+    do_ninja_and_ninja_install
+    sed -i.bak 's/-l${libnameprefix}openblas${libnamesuffix}${libsuffix}.*/-lopenblas\nLibs.private: -lgfortran -lgomp -pthread -lm/' $PKG_CONFIG_PATH/openblas.pc
   cd ..
 }
   
@@ -1558,7 +1558,7 @@ build_whisper() {
   # build_openCL
   build_blas
   build_spriv-headers
-  do_git_checkout https://github.com/ggml-org/whisper.cpp.git whisper_git
+  do_git_checkout https://github.com/ggml-org/whisper.cpp.git whisper_git v1.9.1
   cd whisper_git
     if [[ ! -f $HOME/sandbox/redist/ggml-large-v2-q8_0.bin ]]; then
       mkdir $HOME/sandbox/redist 
@@ -1575,16 +1575,16 @@ build_whisper() {
     do_ninja_and_ninja_install
     # sed -i "s/-I${includedir}.*/-I\${includedir} -fopenmp/" $PKG_CONFIG_PATH/whisper.pc  	
     if [[ $OSTYPE != darwin* ]]; then
-      sed -i.bak 's/^\(Libs:\).*$/\1 -L${libdir} -lwhisper\nRequires: vulkan openblas\nLibs.private: -l:ggml.a -l:ggml-base.a -l:ggml-cpu.a -l:ggml-blas.a -l:ggml-vulkan.a -lstdc++ -lpthread/' $PKG_CONFIG_PATH/whisper.pc
+      sed -i.bak 's/^\(Libs:\).*$/\1 -L${libdir} -lwhisper\nRequires: vulkan openblas\nLibs.private: -l:ggml.a -l:ggml-base.a -l:ggml-cpu.a -l:ggml-blas.a -l:ggml-vulkan.a -lstdc++ -pthread/' $PKG_CONFIG_PATH/whisper.pc
     else Cflags: -I${includedir}
-      sed -i.bak 's/^\(Libs:\).*$/\1 -L${libdir} -lwhisper\nRequires: openblas\nLibs.private: -l:ggml.a -l:ggml-base.a -l:ggml-cpu.a -l:ggml-blas.a -lstdc++ -lpthread/' $PKG_CONFIG_PATH/whisper.pc
+      sed -i.bak 's/^\(Libs:\).*$/\1 -L${libdir} -lwhisper\nRequires: openblas\nLibs.private: -l:ggml.a -l:ggml-base.a -l:ggml-cpu.a -l:ggml-blas.a -lstdc++ -pthread/' $PKG_CONFIG_PATH/whisper.pc
     fi	
     # ffmpeg -i "%~1" -vn -af "whisper=model=C\\:/path/to/ggml-large-v2-q8_0.bin:vad_model=C\\:/path/to/ggml-silero-v6.2.0.bin:use_gpu=true:gpu_device=0:vad_min_silence_duration=1.0:vad_threshold=0.4:language=en:queue=5:destination=C\\:path/to/outputs/output.srt:format=srt" -loglevel debug -f null  "%~1"
  cd ..
 }
 
 build_openCL() {
-  do_git_checkout https://github.com/KhronosGroup/OpenCL-Headers.git OpenCL-Headers_git
+  do_git_checkout https://github.com/KhronosGroup/OpenCL-Headers.git OpenCL-Headers_git e551385
   do_git_checkout https://github.com/KhronosGroup/OpenCL-ICD-Loader.git OpenCL-ICD-Loader_git b07d900
   cd OpenCL-Headers_git
     mkdir -p "$x86_64_prefix"/include/CL
@@ -2716,7 +2716,7 @@ build_ffmpeg() {
     config_options+=" --enable-libsoxr" && sed -i 's|require libsoxr soxr.h|require_pkg_config libsoxr libsoxr soxr.h|' configure
     config_options+=" --enable-libspeex"
     config_options+=" --enable-libsrt"
-    config_options+=" --enable-libtensorflow"
+    # config_options+=" --enable-libtensorflow"
     config_options+=" --enable-libtesseract"
     config_options+=" --enable-libtheora"
     config_options+=" --enable-libtwolame" && sed -i 's|require libtwolame twolame.h|require_pkg_config libtwolame libtwolame twolame.h|' configure 
@@ -2737,7 +2737,7 @@ build_ffmpeg() {
     if [[ $OSTYPE != darwin* ]]; then
       config_options+=" --enable-vulkan"
     fi
-    config_options+=" --enable-whisper"
+    # config_options+=" --enable-whisper"
     config_options+=" --enable-zlib"
     if [[ "$bits_target" != "32" ]]; then
       if [[ $build_svt_hevc = y ]]; then
@@ -3051,9 +3051,9 @@ build_ffmpeg_dependencies() {
   build_libaribb24
   build_libtesseract
   build_lensfun  # requires png, zlib, iconv
-  if [[ $compiler_flavors != "native" ]]; then
-    install_libtensorflow # requires tensorflow.dll; find in redist folder with frei0r plugins
-  fi	
+  # if [[ $compiler_flavors != "native" ]]; then
+    # install_libtensorflow # requires tensorflow.dll; find in redist folder with frei0r plugins
+  # fi	
   build_libvpx
   build_libx265
   build_libopenh264
@@ -3063,7 +3063,7 @@ build_ffmpeg_dependencies() {
     build_vulkan
     build_libplacebo
   fi
-  build_whisper # Can use vulkan or openCL, uses spirv-headers, can use openblas, find ggml databases in redist folder
+  # build_whisper # Can use vulkan or openCL, uses spirv-headers, can use openblas, find ggml databases in redist folder
   build_opencv # Uses tiff png jpeg zlib webp openCL, can use vulkan
   build_frei0r # Needs dlfcn. Uses opencv. 	
   build_avisynth
