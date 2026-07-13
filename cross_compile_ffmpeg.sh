@@ -959,8 +959,8 @@ build_lensfun() {
 
 build_libpsl () {
   export CFLAGS="-DPSL_STATIC"
-  download_and_unpack_file https://github.com/rockdaboot/libpsl/releases/download/0.21.5/libpsl-0.21.5.tar.gz  
-  cd libpsl-0.21.5
+  download_and_unpack_file https://github.com/rockdaboot/libpsl/releases/download/0.23.0/libpsl-0.23.0.tar.gz  
+  cd libpsl-0.23.0
     generic_configure "--disable-nls --disable-rpath --disable-gtk-doc-html --disable-man --disable-runtime"
     do_make_and_make_install
     sed -i.bak "s/Libs: .*/& -lidn2 -lunistring -lws2_32 -liconv/" $PKG_CONFIG_PATH/libpsl.pc
@@ -989,7 +989,7 @@ build_curl () {
     local config_options+="-DGNUTLS_INTERNAL_BUILD" 
   fi  
   export CPPFLAGS+="$CPPFLAGS -DNGHTTP2_STATICLIB -DPSL_STATIC $config_options"
-  do_git_checkout https://github.com/curl/curl.git curl_git curl-8_20_0
+  do_git_checkout https://github.com/curl/curl.git curl_git curl-8_21_0
   cd curl_git 
     if [[ $compiler_flavors != "native" ]]; then
       generic_configure "--with-libssh2 --with-libpsl --with-libidn2 --disable-debug --enable-hsts --with-brotli --enable-versioned-symbols --enable-sspi --with-schannel"
@@ -1011,8 +1011,8 @@ build_lz4 () {
 
  build_libarchive () {
   build_lz4
-  download_and_unpack_file https://github.com/libarchive/libarchive/releases/download/v3.8.7/libarchive-3.8.7.tar.gz
-  cd libarchive-3.8.7
+  download_and_unpack_file https://github.com/libarchive/libarchive/releases/download/v3.8.8/libarchive-3.8.8.tar.gz
+  cd libarchive-3.8.8
     # do_cmake "-B build -GNinja -DENABLE_TEST=0 -DENABLE_NETTLE=1 -DENABLE_OPENSSL=0 -DENABLE_ICONV=0 -DENABLE_PCRE2POSIX=0 -DENABLE_PCREPOSIX=0 -DMSVC_USE_STATIC_CRT=1"
     # do_ninja_and_ninja_install
     generic_configure "--with-nettle --bindir=$x86_64_prefix/bin --without-openssl --without-iconv --disable-posix-regex-lib"
@@ -1071,8 +1071,8 @@ build_deflate() {
 build_libtiff() {
   build_glut
   build_deflate
-  download_and_unpack_file http://download.osgeo.org/libtiff/tiff-4.7.1.tar.gz
-  cd tiff-4.7.1
+  download_and_unpack_file http://download.osgeo.org/libtiff/tiff-4.7.2.tar.gz
+  cd tiff-4.7.2
     generic_configure "--disable-cxx --disable-tests --disable-tools --disable-contrib --disable-docs --disable-sphinx"
     do_make_and_make_install
   cd ..
@@ -1138,8 +1138,8 @@ build_glfw() {
 }
 
 build_libjpeg_turbo() {
-  download_and_unpack_file https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/3.1.4.1/libjpeg-turbo-3.1.4.1.tar.gz libjpeg-turbo-3.1.4.1
-  cd libjpeg-turbo-3.1.4.1
+  download_and_unpack_file https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/3.2.0/libjpeg-turbo-3.2.0.tar.gz libjpeg-turbo-3.2.0
+  cd libjpeg-turbo-3.2.0
     local cmake_params="-DENABLE_SHARED=0 -DCMAKE_ASM_NASM_COMPILER=yasm -DWITH_SIMD=1" #-DWITH_TESTS=0 -DWITH_TOOLS=0 -DWITH_CRT_DLL=0
     if [[ $compiler_flavors != "native" ]]; then
       cmake_params+=" -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake"
@@ -1749,8 +1749,8 @@ build_librubberband() {
 }
 
 build_frei0r() {
-  download_and_unpack_file https://github.com/dyne/frei0r/archive/refs/tags/v3.2.1.tar.gz frei0r-3.2.1
-  cd frei0r-3.2.1
+  download_and_unpack_file https://github.com/dyne/frei0r/archive/refs/tags/v3.2.3.tar.gz frei0r-3.2.3 #3.2.1
+  cd frei0r-3.2.3
     sed -i.bak 's/-arch i386//' CMakeLists.txt # OS X https://github.com/dyne/frei0r/issues/64
     do_cmake "-B build -GNinja -DWITHOUT_OPENCV=0 -DWITHOUT_CAIRO=1 -DWITHOUT_GAVL=1 -DCMAKE_C_FLAGS="-mtune=generic"" # cannot handle opencv with lapack+openmp or some cpu specific flags
     do_ninja_and_ninja_install
@@ -1841,7 +1841,7 @@ build_libcaca() {
 }
 
 build_libdecklink() {
-  do_git_checkout https://gitlab.com/m-ab-s/decklink-headers.git decklink-headers_git 47d84f8d272ca6872b5440eae57609e36014f3b6
+  do_git_checkout https://gitlab.com/m-ab-s/decklink-headers.git decklink-headers_git #47d84f8d272ca6872b5440eae57609e36014f3b6
   cd decklink-headers_git
     do_make_install PREFIX=$x86_64_prefix
   cd ..
@@ -1879,7 +1879,7 @@ build_libass() {
 }
 
 build_vulkan() {
-  do_git_checkout https://github.com/KhronosGroup/Vulkan-Headers.git Vulkan-Headers_git v1.4.341
+  do_git_checkout https://github.com/KhronosGroup/Vulkan-Headers.git Vulkan-Headers_git v1.4.356
   cd Vulkan-Headers_git
     do_cmake_and_install "-DVULKAN_HEADERS_ENABLE_MODULE=NO -DVULKAN_HEADERS_ENABLE_TESTS=NO -DVULKAN_HEADERS_ENABLE_INSTALL=YES"
   cd ..
@@ -1888,13 +1888,13 @@ build_vulkan() {
 build_vulkan_loader() {
   do_git_checkout https://github.com/BtbN/Vulkan-Shim-Loader.git Vulkan-Shim-Loader_git 65b3936528cd92eb4ea3de485d03f858a3850484
   cd Vulkan-Shim-Loader_git # credit to btnb for most code for placebo and deps
-    # _git_checkout https://github.com/KhronosGroup/Vulkan-Headers.git Vulkan-Headers v1.4.341
+    # _git_checkout https://github.com/KhronosGroup/Vulkan-Headers.git Vulkan-Headers v1.4.356
     do_cmake_and_install "-DVULKAN_SHIM_IMPERSONATE=ON" # -DVULKAN_HEADERS_ENABLE_MODULE=NO -DVULKAN_HEADERS_ENABLE_TESTS=NO -DVULKAN_HEADERS_ENABLE_INSTALL=YES"
   cd ..
 }
 
 build_spirv-cross() {
-  do_git_checkout https://github.com/KhronosGroup/SPIRV-Cross.git SPIRV-Cross_git 38681a30e09679191cc3957719eeee76024f6daf
+  do_git_checkout https://github.com/KhronosGroup/SPIRV-Cross.git SPIRV-Cross_git 81fc2ea76c2b8018d4427c380961a6886cb3ce7d
   cd SPIRV-Cross_git
     do_cmake "-B build -GNinja -DSPIRV_CROSS_STATIC=ON -DSPIRV_CROSS_SHARED=OFF -DSPIRV_CROSS_CLI=OFF -DSPIRV_CROSS_ENABLE_TESTS=OFF -DSPIRV_CROSS_FORCE_PIC=ON -DSPIRV_CROSS_ENABLE_CPP=OFF"
     do_ninja_and_ninja_install
@@ -1951,7 +1951,7 @@ EOF
 }
 
 build_shaderc() {
-  do_git_checkout https://github.com/google/shaderc.git shaderc_git b16fb67935326f7ea1ead8bd2b131608b4148230
+  do_git_checkout https://github.com/google/shaderc.git shaderc_git 49a8724d561c13db22b52f99f2a0e2707a9a9e3c
   cd shaderc_git
     ./utils/git-sync-deps
      do_cmake "-B build -GNinja -DSHADERC_SKIP_EXAMPLES=1 -DSHADERC_SKIP_TESTS=1 -DSPIRV_SKIP_TESTS=1 -DSHADERC_SKIP_COPYRIGHT_CHECK=1 -DENABLE_EXCEPTIONS=1\
@@ -1970,7 +1970,7 @@ build_shaderc() {
 }
 
 build_spriv-headers() {
-  do_git_checkout https://github.com/KhronosGroup/SPIRV-Headers.git spriv-headers_git 8c5559c134abcf432ec59db842404087b9906c1a
+  do_git_checkout https://github.com/KhronosGroup/SPIRV-Headers.git spriv-headers_git 02c0394e57af6dfdda7f68973df6aa20fc3f5def
   cd spriv-headers_git
     do_cmake_and_install "-DSPIRV_HEADERS_ENABLE_TESTS=0 -DSPIRV_HEADERS_ENABLE_INSTALL=1"
   cd ..
@@ -1983,7 +1983,7 @@ build_libplacebo() {
   build_spirv-cross
   build_libdovi
   build_shaderc
-  do_git_checkout https://code.videolan.org/videolan/libplacebo.git libplacebo_git 464d6eab8900c87a539943d0cd8575fffe566f72
+  do_git_checkout https://code.videolan.org/videolan/libplacebo.git libplacebo_git 05ac2cca6571c04d06369a26825d207781b73f32
   activate_meson
   cd libplacebo_git
     git submodule update --init --recursive --depth=1 --filter=blob:none
@@ -2839,7 +2839,7 @@ build_ffmpeg() {
         config_options+=" --enable-audiotoolbox --extra-libs=-lAudioToolboxWrapper" && sed -i 's/check_apple_framework AudioToolbox.*/check_apple_framework CoreAudio/' configure
       fi
       if [[ $compiler_flavors != "native" ]]; then
-        config_options+=" --enable-decklink" # Error finding rpc.h in native builds even if it's available
+        config_options+=" --enable-decklink" && sed -ri 's|#include <DeckLinkAPI_v14_2_1.h>||g' libavdevice/decklink_{dec,enc,common}.cpp # Remove explicit include of DeckLinkAPI_v14_2_1.h since it's merged into the main file for Windows
       fi
       # other possible options: --enable-openssl [unneeded since we already use gnutls]
     fi
@@ -2977,7 +2977,7 @@ build_ffmpeg_dependencies() {
     build_libvpl
   fi
   build_nv_headers
-  install_cudatoolkit # v13.3
+  install_cudatoolkit # v13.3.0
   build_libzimg # Uses dlfcn.
   build_libopenjpeg
   build_glew
@@ -3142,8 +3142,8 @@ prefer_stable=y # Only for x264 and x265.
 build_intel_qsv=y # libvpl 
 build_amd_amf=y
 disable_nonfree=y # comment out to force user y/n selection
-original_cflags='-mtune=generic -O2 -pipe' 
-original_cxxflags='-mtune=generic -O2 -pipe' 
+original_cflags='-mtune=generic -O3 -pipe' 
+original_cxxflags='-mtune=generic -O3 -pipe' 
 original_cppflags='-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3' 
 # if you specify a march it needs to first so x264's configure will use it :| [ is that still the case ?]
 #flags=$(cat /proc/cpuinfo | grep flags)
