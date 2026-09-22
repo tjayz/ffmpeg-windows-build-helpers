@@ -334,7 +334,7 @@ install_cross_compiler() {
     else
 	  local config_options="--cached-sources"
     fi
-    local zeranoe_script_options="--gcc-branch=releases/gcc-15 $config_options"
+    local zeranoe_script_options="--gcc-branch=releases/gcc-16 $config_options"
     if [[ ($compiler_flavors == "win32" || $compiler_flavors == "multi") && ! -f ../$win32_gcc ]]; then
       echo "Building win32 cross compiler..."
       download_gcc_build_script $zeranoe_script_name
@@ -796,9 +796,9 @@ build_bzip2() {
 }
 
 build_liblzma() {
-  download_and_unpack_file https://sourceforge.net/projects/lzmautils/files/xz-5.8.3.tar.xz
-  cd xz-5.8.3
-    do_cmake "-B build -GNinja -DXZ_NLS=0 -DXZ_DOC=0 -DZ_TOOL_SCRIPTS=0 -DXZ_TOOL_LZMAINFO=0 -DXZ_TOOL_LZMADEC=0 -DXZ_TOOL_XZDEC=0 -DXZ_TOOL_XZ=0 -DXZ_TOOL_SYMLINKS=0"
+  download_and_unpack_file https://sourceforge.net/projects/lzmautils/files/xz-5.8.4.tar.xz
+  cd xz-5.8.4
+    do_cmake "-B build -GNinja -DXZ_NLS=0 -DXZ_DOC=0 -DXZ_TOOL_LZMAINFO=0 -DXZ_TOOL_LZMADEC=0 -DXZ_TOOL_XZDEC=0 -DXZ_TOOL_XZ=0"
     do_ninja_and_ninja_install
   cd ..
 }
@@ -807,7 +807,7 @@ build_zlib() {
   download_and_unpack_file https://github.com/madler/zlib/archive/refs/tags/v1.3.2.tar.gz zlib-1.3.2
   cd zlib-1.3.2
     sed -i.bak 's/set(zlib_static_suffix "s").*/set(zlib_static_suffix "")/' CMakeLists.txt
-    do_cmake "-B build -GNinja -DZLIB_BUILD_TESTING=0 -DZLIB_BUILD_SHARED=0 -DZLIB_INSTALL_COMPAT_DLL=0"
+    do_cmake "-B build -GNinja -DZLIB_BUILD_TESTING=0 -DZLIB_BUILD_SHARED=0"
     do_ninja_and_ninja_install
   cd ..
 }
@@ -893,10 +893,11 @@ build_nv_headers() {
 build_libvpl () {
   do_git_checkout https://github.com/intel/libvpl.git libvpl_git
   cd libvpl_git
+    apply_patch file://$patch_dir/libvpl.patch -p1
     if [ "$bits_target" = "32" ]; then
       apply_patch "https://raw.githubusercontent.com/msys2/MINGW-packages/master/mingw-w64-libvpl/0003-cmake-fix-32bit-install.patch" -p1
     fi
-    do_cmake "-B build -GNinja -DINSTALL_EXAMPLES=OFF -DINSTALL_DEV=ON -DBUILD_EXPERIMENTAL=OFF" 
+    do_cmake "-B build -GNinja -DINSTALL_EXAMPLES=OFF -DINSTALL_DEV=ON -DBUILD_EXPERIMENTAL=OFF"
     do_ninja_and_ninja_install
     sed -i.bak "s/Libs: .*/& -lstdc++/" "$PKG_CONFIG_PATH/vpl.pc"
   cd ..
@@ -959,8 +960,8 @@ build_lensfun() {
 
 build_libpsl () {
   export CFLAGS="-DPSL_STATIC"
-  download_and_unpack_file https://github.com/rockdaboot/libpsl/releases/download/0.23.0/libpsl-0.23.0.tar.gz  
-  cd libpsl-0.23.0
+  download_and_unpack_file https://github.com/rockdaboot/libpsl/releases/download/0.23.3/libpsl-0.23.3.tar.gz  
+  cd libpsl-0.23.3
     generic_configure "--disable-nls --disable-rpath --disable-gtk-doc-html --disable-man --disable-runtime"
     do_make_and_make_install
     sed -i.bak "s/Libs: .*/& -lidn2 -lunistring -lws2_32 -liconv/" $PKG_CONFIG_PATH/libpsl.pc
@@ -970,8 +971,8 @@ build_libpsl () {
  
 build_nghttp2 () { 
   export CFLAGS="-DNGHTTP2_STATICLIB"
-  download_and_unpack_file https://github.com/nghttp2/nghttp2/releases/download/v1.69.0/nghttp2-1.69.0.tar.gz
-  cd nghttp2-1.69.0
+  download_and_unpack_file https://github.com/nghttp2/nghttp2/releases/download/v1.70.0/nghttp2-1.70.0.tar.gz
+  cd nghttp2-1.70.0
     do_cmake "-B build -DENABLE_LIB_ONLY=1 -DBUILD_SHARED_LIBS=0 -DBUILD_STATIC_LIBS=1 -GNinja"
     do_ninja_and_ninja_install
   reset_cflags
@@ -989,7 +990,7 @@ build_curl () {
     local config_options+="-DGNUTLS_INTERNAL_BUILD" 
   fi  
   export CPPFLAGS+="$CPPFLAGS -DNGHTTP2_STATICLIB -DPSL_STATIC $config_options"
-  do_git_checkout https://github.com/curl/curl.git curl_git curl-8_21_0
+  do_git_checkout https://github.com/curl/curl.git curl_git curl-8_22_0
   cd curl_git 
     if [[ $compiler_flavors != "native" ]]; then
       generic_configure "--with-libssh2 --with-libpsl --with-libidn2 --disable-debug --enable-hsts --with-brotli --enable-versioned-symbols --enable-sspi --with-schannel"
@@ -1011,8 +1012,8 @@ build_lz4 () {
 
  build_libarchive () {
   build_lz4
-  download_and_unpack_file https://github.com/libarchive/libarchive/releases/download/v3.8.8/libarchive-3.8.8.tar.gz
-  cd libarchive-3.8.8
+  download_and_unpack_file https://github.com/libarchive/libarchive/releases/download/v3.8.9/libarchive-3.8.9.tar.gz
+  cd libarchive-3.8.9
     # do_cmake "-B build -GNinja -DENABLE_TEST=0 -DENABLE_NETTLE=1 -DENABLE_OPENSSL=0 -DENABLE_ICONV=0 -DENABLE_PCRE2POSIX=0 -DENABLE_PCREPOSIX=0 -DMSVC_USE_STATIC_CRT=1"
     # do_ninja_and_ninja_install
     generic_configure "--with-nettle --bindir=$x86_64_prefix/bin --without-openssl --without-iconv --disable-posix-regex-lib"
@@ -1054,7 +1055,7 @@ build_libleptonica() {
 build_glut() {
   download_and_unpack_file https://github.com/freeglut/freeglut/releases/download/v3.8.0/freeglut-3.8.0.tar.gz
   cd freeglut-3.8.0
-    do_cmake "-B build -GNinja -DFREEGLUT_BUILD_DEMOS=0 -DFREEGLUT_BUILD_SHARED_LIBS=0 -DFREEGLUT_INSTALL_MAN_PAGES=0 -DFREEGLUT_REPLACE_GLUT=1 -DFREEGLUT_BUILD_STATIC_LIBS=1"
+    do_cmake "-B build -GNinja -DFREEGLUT_BUILD_DEMOS=0 -DFREEGLUT_BUILD_SHARED_LIBS=0 -DFREEGLUT_REPLACE_GLUT=1 -DFREEGLUT_BUILD_STATIC_LIBS=1"
     do_ninja_and_ninja_install
     sed -i.bak "s/-lfreeglut.*/-lglut/" $PKG_CONFIG_PATH/glut.pc
   cd ..
@@ -1075,11 +1076,10 @@ build_libtiff() {
   cd tiff-4.7.2
     generic_configure "--disable-cxx --disable-tests --disable-tools --disable-contrib --disable-docs --disable-sphinx"
     do_make_and_make_install
-  cd ..
     sed -i.bak 's/libzstd.*/libzstd libwebp libsharpyuv libpng libpng16 libturbojpeg glut /' $PKG_CONFIG_PATH/libtiff-4.pc
     sed -i 's/-lm.*/-lm -lopengl32/' $PKG_CONFIG_PATH/libtiff-4.pc
     sed -i 's/-I${includedir}.*/-I${includedir} -DFREEGLUT_STATIC/' $PKG_CONFIG_PATH/libtiff-4.pc
-  #cd ..
+  cd ..
 }
 
 build_libtesseract() {
@@ -1131,8 +1131,8 @@ build_glew() {
 }
 
 build_glfw() {
-  download_and_unpack_file https://github.com/glfw/glfw/releases/download/3.4/glfw-3.4.zip glfw-3.4
-  cd glfw-3.4
+  download_and_unpack_file https://github.com/glfw/glfw/releases/download/3.5.1/glfw-3.5.1.zip glfw-3.5.1
+  cd glfw-3.5.1
     do_cmake_and_install
   cd ..
 }
@@ -1223,8 +1223,8 @@ build_freetype() {
 }
 
 build_libxml2() {
-  download_and_unpack_file https://gitlab.gnome.org/GNOME/libxml2/-/archive/v2.15.3/libxml2-v2.15.3.tar.gz
-  cd libxml2-v2.15.3
+  download_and_unpack_file https://gitlab.gnome.org/GNOME/libxml2/-/archive/v2.15.4/libxml2-v2.15.4.tar.gz
+  cd libxml2-v2.15.4
     do_cmake "-B build -GNinja -DLIBXML2_WITH_HTTP=0 -DLIBXML2_WITH_PYTHON=0 -DLIBXML2_WITH_TESTS=0"
     do_ninja_and_ninja_install
   cd ..
@@ -1347,7 +1347,7 @@ build_flac () {
 
 build_openmpt () {
   build_flac
-  do_git_checkout https://github.com/OpenMPT/openmpt.git openmpt_git OpenMPT-1.32.10.00
+  do_git_checkout https://github.com/OpenMPT/openmpt.git openmpt_git OpenMPT-1.32.11.00
   cd openmpt_git
     do_make_and_make_install "PREFIX=$x86_64_prefix CONFIG=mingw-w64 WINDOWS_ARCH=amd64 DYNLINK=0 SHARED_LIB=0 STATIC_LIB=1 EXAMPLES=0 TEST=0 \
 	MODERN=0 NO_ZLIB=0 NO_MPG123=0 NO_OGG=0 NO_VORBIS=0 NO_VORBISFILE=0 NO_SDL2=0 NO_SNDFILE=0 NO_FLAC=0 OPENMPT123=0 \
@@ -1420,8 +1420,8 @@ build_libsndfile() {
 }
 
 build_mpg123() {
-  download_and_unpack_file https://sourceforge.net/projects/mpg123/files/mpg123/1.33.6/mpg123-1.33.6.tar.bz2
-  cd mpg123-1.33.6
+  download_and_unpack_file https://sourceforge.net/projects/mpg123/files/mpg123/1.33.7/mpg123-1.33.7.tar.bz2
+  cd mpg123-1.33.7
     generic_configure_make_install
   cd ..
 }
@@ -1514,9 +1514,8 @@ build_libmodplug() {
 }
 
 build_libgme() {
-  # do_git_checkout https://bitbucket.org/mpyne/game-music-emu.git
-  download_and_unpack_file https://bitbucket.org/mpyne/game-music-emu/downloads/game-music-emu-0.6.3.tar.xz
-  cd game-music-emu-0.6.3
+  download_and_unpack_file https://github.com/libgme/game-music-emu/releases/download/0.6.5/libgme-0.6.5-src.tar.gz libgme-0.6.5
+  cd libgme-0.6.5
     do_cmake_and_install "-DENABLE_UBSAN=0"
   cd ..
 }
@@ -1529,11 +1528,11 @@ build_mingw_std_threads() {
 }
 
 install_cudatoolkit() {
-  if [[ ! -f cuda_13.3.0_610.43.02_linux.run ]]; then
-    wget https://developer.download.nvidia.com/compute/cuda/13.3.0/local_installers/cuda_13.3.0_610.43.02_linux.run
+  if [[ ! -f cuda_13.3.1_610.43.02_linux.run ]]; then
+    wget https://developer.download.nvidia.com/compute/cuda/13.3.1/local_installers/cuda_13.3.1_610.43.02_linux.run # versions 13.4+ no longer have wsl-ubuntu option
   fi
   if [[ ! -f $HOME/sandbox/x86_64/bin/nvcc ]]; then
-    chmod u+x cuda_13.3.0_610.43.02_linux.run && ./cuda_13.3.0_610.43.02_linux.run --toolkit --installpath=$HOME/sandbox/x86_64 --silent --no-man-page --tmpdir=/var/tmp
+    chmod u+x cuda_13.3.1_610.43.02_linux.run && ./cuda_13.3.1_610.43.02_linux.run --toolkit --installpath=$HOME/sandbox/x86_64 --silent --no-man-page --tmpdir=/var/tmp
     echo 'export PATH=$HOME/sandbox/x86_64/bin:${PATH}' >> ~/.bashrc
     echo 'export PATH=$HOME/sandbox/x86_64/nvvm/bin:${PATH}' >> ~/.bashrc
     echo 'export LD_LIBRARY_PATH=/usr/lib/wsl/lib:${LD_LIBRARY_PATH}' >> ~/.bashrc
@@ -1557,7 +1556,7 @@ build_blas() {
 build_whisper() {
   # build_openCL
   build_blas
-  build_spriv-headers
+  build_spirv-headers
   do_git_checkout https://github.com/ggml-org/whisper.cpp.git whisper_git v1.9.1
   cd whisper_git
     if [[ ! -f $HOME/sandbox/redist/ggml-large-v2-q8_0.bin ]]; then
@@ -1628,7 +1627,7 @@ build_libbluray() {
   do_git_checkout https://code.videolan.org/videolan/libbluray.git
   activate_meson
   cd libbluray_git
-    apply_patch "https://raw.githubusercontent.com/m-ab-s/mabs-patches/master/libbluray/0001-dec-prefix-with-libbluray-for-now.patch" -p1
+    # apply_patch "https://raw.githubusercontent.com/m-ab-s/mabs-patches/master/libbluray/0001-dec-prefix-with-libbluray-for-now.patch" -p1
     local meson_options="setup -Denable_examples=false -Dbdj_jar=disabled --wrap-mode=default . build"
     if [[ $compiler_flavors != "native" ]]; then
       # get_local_meson_cross_with_propeties 
@@ -1749,8 +1748,8 @@ build_librubberband() {
 }
 
 build_frei0r() {
-  download_and_unpack_file https://github.com/dyne/frei0r/archive/refs/tags/v3.2.3.tar.gz frei0r-3.2.3 #3.2.1
-  cd frei0r-3.2.3
+  download_and_unpack_file https://github.com/dyne/frei0r/archive/refs/tags/v3.5.0.tar.gz frei0r-3.5.0 
+  cd frei0r-3.5.0
     sed -i.bak 's/-arch i386//' CMakeLists.txt # OS X https://github.com/dyne/frei0r/issues/64
     do_cmake "-B build -GNinja -DWITHOUT_OPENCV=0 -DWITHOUT_CAIRO=1 -DWITHOUT_GAVL=1 -DCMAKE_C_FLAGS="-mtune=generic"" # cannot handle opencv with lapack+openmp or some cpu specific flags
     do_ninja_and_ninja_install
@@ -1856,7 +1855,7 @@ build_zvbi() {
 }
 
 build_fribidi() {
-  download_and_unpack_file https://github.com/fribidi/fribidi/releases/download/v1.0.16/fribidi-1.0.16.tar.xz # Get c2man errors building from repo
+  download_and_unpack_file https://github.com/fribidi/fribidi/releases/download/v1.0.16/fribidi-1.0.16.tar.xz # Get c2man errors building from repo and targ.xz v1.0.17
   cd fribidi-1.0.16
     generic_configure "--disable-debug --disable-deprecated --disable-docs"
     do_make_and_make_install
@@ -1864,8 +1863,8 @@ build_fribidi() {
 }
 
 build_libsrt() {
-  download_and_unpack_file https://github.com/Haivision/srt/archive/v1.5.5.tar.gz srt-1.5.5
-  cd srt-1.5.5
+  download_and_unpack_file https://github.com/Haivision/srt/archive/v1.5.7.tar.gz srt-1.5.7
+  cd srt-1.5.7
     if [[ $compiler_flavors != "native" ]]; then
       apply_patch file://$patch_dir/srt.app.patch -p1
     fi
@@ -1879,7 +1878,8 @@ build_libass() {
 }
 
 build_vulkan() {
-  do_git_checkout https://github.com/KhronosGroup/Vulkan-Headers.git Vulkan-Headers_git v1.4.356
+  build_spirv-headers
+  do_git_checkout https://github.com/KhronosGroup/Vulkan-Headers.git Vulkan-Headers_git v1.4.359
   cd Vulkan-Headers_git
     do_cmake_and_install "-DVULKAN_HEADERS_ENABLE_MODULE=NO -DVULKAN_HEADERS_ENABLE_TESTS=NO -DVULKAN_HEADERS_ENABLE_INSTALL=YES"
   cd ..
@@ -1888,13 +1888,13 @@ build_vulkan() {
 build_vulkan_loader() {
   do_git_checkout https://github.com/BtbN/Vulkan-Shim-Loader.git Vulkan-Shim-Loader_git 65b3936528cd92eb4ea3de485d03f858a3850484
   cd Vulkan-Shim-Loader_git # credit to btnb for most code for placebo and deps
-    # _git_checkout https://github.com/KhronosGroup/Vulkan-Headers.git Vulkan-Headers v1.4.356
+    # _git_checkout https://github.com/KhronosGroup/Vulkan-Headers.git Vulkan-Headers v1.4.359
     do_cmake_and_install "-DVULKAN_SHIM_IMPERSONATE=ON" # -DVULKAN_HEADERS_ENABLE_MODULE=NO -DVULKAN_HEADERS_ENABLE_TESTS=NO -DVULKAN_HEADERS_ENABLE_INSTALL=YES"
   cd ..
 }
 
 build_spirv-cross() {
-  do_git_checkout https://github.com/KhronosGroup/SPIRV-Cross.git SPIRV-Cross_git 81fc2ea76c2b8018d4427c380961a6886cb3ce7d
+  do_git_checkout https://github.com/KhronosGroup/SPIRV-Cross.git SPIRV-Cross_git 9c3c8e2cefdd8194b193bb8ed2fdff4d5527e382
   cd SPIRV-Cross_git
     do_cmake "-B build -GNinja -DSPIRV_CROSS_STATIC=ON -DSPIRV_CROSS_SHARED=OFF -DSPIRV_CROSS_CLI=OFF -DSPIRV_CROSS_ENABLE_TESTS=OFF -DSPIRV_CROSS_FORCE_PIC=ON -DSPIRV_CROSS_ENABLE_CPP=OFF"
     do_ninja_and_ninja_install
@@ -1951,7 +1951,7 @@ EOF
 }
 
 build_shaderc() {
-  do_git_checkout https://github.com/google/shaderc.git shaderc_git 49a8724d561c13db22b52f99f2a0e2707a9a9e3c
+  do_git_checkout https://github.com/google/shaderc.git shaderc_git 7060a6615a1c6e2515e696651eea685524ecadb5
   cd shaderc_git
     ./utils/git-sync-deps
      do_cmake "-B build -GNinja -DSHADERC_SKIP_EXAMPLES=1 -DSHADERC_SKIP_TESTS=1 -DSPIRV_SKIP_TESTS=1 -DSHADERC_SKIP_COPYRIGHT_CHECK=1 -DENABLE_EXCEPTIONS=1\
@@ -1969,9 +1969,9 @@ build_shaderc() {
   cd ../../
 }
 
-build_spriv-headers() {
-  do_git_checkout https://github.com/KhronosGroup/SPIRV-Headers.git spriv-headers_git 02c0394e57af6dfdda7f68973df6aa20fc3f5def
-  cd spriv-headers_git
+build_spirv-headers() {
+  do_git_checkout https://github.com/KhronosGroup/SPIRV-Headers.git spirv-headers_git f0bf307f7c49d26484db596185cece53c37701fc
+  cd spirv-headers_git
     do_cmake_and_install "-DSPIRV_HEADERS_ENABLE_TESTS=0 -DSPIRV_HEADERS_ENABLE_INSTALL=1"
   cd ..
 }
@@ -1983,7 +1983,7 @@ build_libplacebo() {
   build_spirv-cross
   build_libdovi
   build_shaderc
-  do_git_checkout https://code.videolan.org/videolan/libplacebo.git libplacebo_git 05ac2cca6571c04d06369a26825d207781b73f32
+  do_git_checkout https://code.videolan.org/videolan/libplacebo.git libplacebo_git 22ee762e8e0890fc54068beb670310f0edce7263
   activate_meson
   cd libplacebo_git
     git submodule update --init --recursive --depth=1 --filter=blob:none
@@ -2149,17 +2149,17 @@ build_libvvdec() {
 
 build_libx265() {
   local checkout_dir=x265
-  local remote="https://bitbucket.org/multicoreware/x265_git"
+  local remote="https://github.com/Multicorewareinc/x265"
   if [[ ! -z $x265_git_checkout_version ]]; then
     checkout_dir+="_$x265_git_checkout_version"
     do_git_checkout "$remote" $checkout_dir "$x265_git_checkout_version"
   else
     if [[ $prefer_stable = "n" ]]; then
       checkout_dir+="_unstable"
-      do_git_checkout "$remote" $checkout_dir "origin/master"
+      do_git_checkout "$remote" $checkout_dir "master"
     fi
     if [[ $prefer_stable = "y" ]]; then
-      do_git_checkout "$remote" $checkout_dir "4.2"
+      do_git_checkout "$remote" $checkout_dir "4.3"
     fi
   fi
   cd $checkout_dir
@@ -2690,7 +2690,7 @@ build_ffmpeg() {
     config_options+=" --enable-libflite"
     config_options+=" --enable-libfreetype"
     config_options+=" --enable-libfribidi"
-    # config_options+=" --enable-libglslang" # this or libshaderc not both
+    # config_options+=" --enable-libglslang" # this or libshaderc not both; removed entirely ffmpeg v9+
     config_options+=" --enable-libgme"
     config_options+=" --enable-libgsm"	
     config_options+=" --enable-libharfbuzz"
@@ -2711,7 +2711,7 @@ build_ffmpeg() {
     if [[ $OSTYPE != darwin* ]]; then
       config_options+=" --enable-libplacebo"
     fi
-    config_options+=" --enable-libshaderc" 	
+    # config_options+=" --enable-libshaderc" # removed entirely ffmpeg v9+	
     config_options+=" --enable-libsnappy"
     config_options+=" --enable-libsoxr" && sed -i 's|require libsoxr soxr.h|require_pkg_config libsoxr libsoxr soxr.h|' configure
     config_options+=" --enable-libspeex"
@@ -2723,7 +2723,7 @@ build_ffmpeg() {
     config_options+=" --enable-libvmaf"
     config_options+=" --enable-libvo-amrwbenc"
     config_options+=" --enable-libvorbis"
-    config_options+=" --enable-libvvdec" && apply_patch "https://raw.githubusercontent.com/wiki/fraunhoferhhi/vvdec/data/patch/v7-0001-avcodec-add-external-dec-libvvdec-for-H266-VVC.patch" -p1
+    config_options+=" --enable-libvvdec" && apply_patch "https://raw.githubusercontent.com/wiki/fraunhoferhhi/vvdec/data/patch/v9-libvvdec.patch" -p1
     config_options+=" --enable-libvvenc"
     config_options+=" --enable-libwebp"
     config_options+=" --enable-libxml2"
@@ -3037,7 +3037,7 @@ build_ffmpeg_dependencies() {
     build_fdk-aac # Uses dlfcn.
     if [[ $compiler_flavors != "native" ]]; then
 	 build_AudioToolboxWrapper # This wrapper library enables FFmpeg to use AudioToolbox codecs on Windows, with DLLs shipped with iTunes.
-      build_libdecklink # Error finding rpc.h in native builds even if it's available
+     build_libdecklink # Error finding rpc.h in native builds even if it's available
     fi
   fi
   build_zvbi # Uses iconv, libpng and dlfcn.
@@ -3149,7 +3149,7 @@ original_cppflags='-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3'
 #flags=$(cat /proc/cpuinfo | grep flags)
 #if [[ $flags =~ "ssse3" ]]; then # See https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html, https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html and https://stackoverflow.com/questions/19689014/gcc-difference-between-o3-and-os.
 
-ffmpeg_git_checkout_version=n8.1.2
+ffmpeg_git_checkout_version=n9.0.2
 build_ismindex=n
 enable_gpl=y
 build_x264_with_libav=n # To build x264 with Libavformat.
