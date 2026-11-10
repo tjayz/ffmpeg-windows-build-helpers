@@ -804,8 +804,8 @@ build_liblzma() {
 }
 
 build_zlib() {
-  download_and_unpack_file https://github.com/madler/zlib/archive/refs/tags/v1.3.2.tar.gz zlib-1.3.2
-  cd zlib-1.3.2
+  download_and_unpack_file https://github.com/madler/zlib/archive/refs/tags/v1.4.tar.gz zlib-1.4
+  cd zlib-1.4
     sed -i.bak 's/set(zlib_static_suffix "s").*/set(zlib_static_suffix "")/' CMakeLists.txt
     do_cmake "-B build -GNinja -DZLIB_BUILD_TESTING=0 -DZLIB_BUILD_SHARED=0"
     do_ninja_and_ninja_install
@@ -813,15 +813,15 @@ build_zlib() {
 }
 
 build_iconv() {
-  download_and_unpack_file https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.19.tar.gz
-  cd libiconv-1.19
+  download_and_unpack_file https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.19.1.tar.gz
+  cd libiconv-1.19.1
     generic_configure "--disable-nls"
     do_make "install-lib" # No need for 'do_make_install', because 'install-lib' already has install-instructions.
   cd ..
 }
 
 build_brotli() {
-  do_git_checkout https://github.com/google/brotli.git brotli_git v1.2.0
+  do_git_checkout https://github.com/google/brotli.git brotli_git v1.2.1
   cd brotli_git
     do_cmake "-B build -G Ninja"
     do_ninja_and_ninja_install
@@ -893,7 +893,7 @@ build_nv_headers() {
 build_libvpl () {
   do_git_checkout https://github.com/intel/libvpl.git libvpl_git
   cd libvpl_git
-    apply_patch file://$patch_dir/libvpl.patch -p1
+    # apply_patch file://$patch_dir/libvpl.patch -p1
     if [ "$bits_target" = "32" ]; then
       apply_patch "https://raw.githubusercontent.com/msys2/MINGW-packages/master/mingw-w64-libvpl/0003-cmake-fix-32bit-install.patch" -p1
     fi
@@ -971,8 +971,8 @@ build_libpsl () {
  
 build_nghttp2 () { 
   export CFLAGS="-DNGHTTP2_STATICLIB"
-  download_and_unpack_file https://github.com/nghttp2/nghttp2/releases/download/v1.70.0/nghttp2-1.70.0.tar.gz
-  cd nghttp2-1.70.0
+  download_and_unpack_file https://github.com/nghttp2/nghttp2/releases/download/v1.71.0/nghttp2-1.71.0.tar.gz
+  cd nghttp2-1.71.0
     do_cmake "-B build -DENABLE_LIB_ONLY=1 -DBUILD_SHARED_LIBS=0 -DBUILD_STATIC_LIBS=1 -GNinja"
     do_ninja_and_ninja_install
   reset_cflags
@@ -990,7 +990,7 @@ build_curl () {
     local config_options+="-DGNUTLS_INTERNAL_BUILD" 
   fi  
   export CPPFLAGS+="$CPPFLAGS -DNGHTTP2_STATICLIB -DPSL_STATIC $config_options"
-  do_git_checkout https://github.com/curl/curl.git curl_git curl-8_22_0
+  do_git_checkout https://github.com/curl/curl.git curl_git curl-8_23_0
   cd curl_git 
     if [[ $compiler_flavors != "native" ]]; then
       generic_configure "--with-libssh2 --with-libpsl --with-libidn2 --disable-debug --enable-hsts --with-brotli --enable-versioned-symbols --enable-sspi --with-schannel"
@@ -1003,8 +1003,8 @@ build_curl () {
 }
 
 build_lz4 () {
-  download_and_unpack_file https://github.com/lz4/lz4/releases/download/v1.10.0/lz4-1.10.0.tar.gz
-  cd lz4-1.10.0
+  download_and_unpack_file https://github.com/lz4/lz4/releases/download/v1.11.0/lz4-1.11.0.tar.gz
+  cd lz4-1.11.0
     do_cmake "-S build/cmake -B build -GNinja -DBUILD_STATIC_LIBS=1"
     do_ninja_and_ninja_install
   cd .. 
@@ -1012,8 +1012,8 @@ build_lz4 () {
 
  build_libarchive () {
   build_lz4
-  download_and_unpack_file https://github.com/libarchive/libarchive/releases/download/v3.8.9/libarchive-3.8.9.tar.gz
-  cd libarchive-3.8.9
+  download_and_unpack_file https://github.com/libarchive/libarchive/releases/download/v3.8.11/libarchive-3.8.11.tar.gz
+  cd libarchive-3.8.11
     # do_cmake "-B build -GNinja -DENABLE_TEST=0 -DENABLE_NETTLE=1 -DENABLE_OPENSSL=0 -DENABLE_ICONV=0 -DENABLE_PCRE2POSIX=0 -DENABLE_PCREPOSIX=0 -DMSVC_USE_STATIC_CRT=1"
     # do_ninja_and_ninja_install
     generic_configure "--with-nettle --bindir=$x86_64_prefix/bin --without-openssl --without-iconv --disable-posix-regex-lib"
@@ -1138,8 +1138,8 @@ build_glfw() {
 }
 
 build_libjpeg_turbo() {
-  download_and_unpack_file https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/3.2.0/libjpeg-turbo-3.2.0.tar.gz libjpeg-turbo-3.2.0
-  cd libjpeg-turbo-3.2.0
+  download_and_unpack_file https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/3.2.1/libjpeg-turbo-3.2.1.tar.gz libjpeg-turbo-3.2.1
+  cd libjpeg-turbo-3.2.1
     local cmake_params="-DENABLE_SHARED=0 -DCMAKE_ASM_NASM_COMPILER=yasm -DWITH_SIMD=1" #-DWITH_TESTS=0 -DWITH_TOOLS=0 -DWITH_CRT_DLL=0
     if [[ $compiler_flavors != "native" ]]; then
       cmake_params+=" -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake"
@@ -1160,8 +1160,8 @@ EOF
 }
 
 build_libpng() {
-  download_and_unpack_file https://github.com/pnggroup/libpng/archive/refs/tags/v1.6.58.tar.gz libpng-1.6.58
-  cd libpng-1.6.58
+  download_and_unpack_file https://github.com/pnggroup/libpng/archive/refs/tags/v1.6.59.tar.gz libpng-1.6.59
+  cd libpng-1.6.59
     do_cmake "-B build -GNinja -DPNG_SHARED=0 -DPNG_TESTS=0"
     do_ninja_and_ninja_install
   cd ..
@@ -1204,7 +1204,7 @@ build_harfbuzz() {
 }
 
 build_freetype() {
-  do_git_checkout https://github.com/freetype/freetype.git freetype_git VER-2-14-3
+  do_git_checkout https://github.com/freetype/freetype.git freetype_git VER-2-15-0
   cd freetype_git
     local config_options=""
     if [[ -e $PKG_CONFIG_PATH/harfbuzz.pc ]]; then
@@ -1284,7 +1284,7 @@ build_libnettle() {
 }
 
 build_unistring() {
-  generic_download_and_make_and_install https://ftp.gnu.org/gnu/libunistring/libunistring-1.4.2.tar.gz
+  generic_download_and_make_and_install https://ftp.gnu.org/gnu/libunistring/libunistring-1.5.tar.gz
 }
 
 build_libidn2() {
@@ -1296,13 +1296,13 @@ build_libidn2() {
 }
 
 build_openssl-3.0.8() {
-  download_and_unpack_file https://www.openssl.org/source/openssl-3.0.8.tar.gz openssl-3.0.8
-  if [[ ! -f openssl-3.0.8/meson.build ]]; then
-    wget https://wrapdb.mesonbuild.com/v2/openssl_3.0.8-3/get_patch
+  download_and_unpack_file https://www.openssl.org/source/openssl-3.0.10.tar.gz openssl-3.0.10
+  if [[ ! -f openssl-3.0.10/meson.build ]]; then
+    wget https://wrapdb.mesonbuild.com/v2/openssl_3.0.10-1/get_patch
     unzip -o get_patch && rm get_patch
   fi
   activate_meson
-  cd openssl-3.0.8
+  cd openssl-3.0.10
     local meson_options="setup -Dasm=disabled . build"
     if [[ $compiler_flavors != "native" ]]; then
       # get_local_meson_cross_with_propeties 
@@ -1347,7 +1347,7 @@ build_flac () {
 
 build_openmpt () {
   build_flac
-  do_git_checkout https://github.com/OpenMPT/openmpt.git openmpt_git OpenMPT-1.32.11.00
+  do_git_checkout https://github.com/OpenMPT/openmpt.git openmpt_git OpenMPT-1.32.12.00
   cd openmpt_git
     do_make_and_make_install "PREFIX=$x86_64_prefix CONFIG=mingw-w64 WINDOWS_ARCH=amd64 DYNLINK=0 SHARED_LIB=0 STATIC_LIB=1 EXAMPLES=0 TEST=0 \
 	MODERN=0 NO_ZLIB=0 NO_MPG123=0 NO_OGG=0 NO_VORBIS=0 NO_VORBISFILE=0 NO_SDL2=0 NO_SNDFILE=0 NO_FLAC=0 OPENMPT123=0 \
@@ -1607,7 +1607,7 @@ build_opencv() {
   build_mingw_std_threads
   build_openCL
   # build_blas
-  do_git_checkout https://github.com/opencv/opencv opencv_git 4.13.0
+  do_git_checkout https://github.com/opencv/opencv opencv_git 4.14.0
   cd opencv_git
     if [[ $OSTYPE != darwin* ]]; then
       local config_options="1" 
@@ -1617,7 +1617,7 @@ build_opencv() {
     do_cmake "-B build -GNinja -DWITH_FFMPEG=0 -DBUILD_TESTS=0 -DBUILD_PERF_TESTS=0 -DBUILD_ZLIB=0 -DBUILD_TIFF=0 -DBUILD_PNG=0 -DBUILD_WEBP=0 -DBUILD_JPEG=0 -DBUILD_OPENJPEG=0 -DBUILD_opencv_apps=0 -DBUILD_SHARED_LIBS=0 \
 	-DOPENCV_GENERATE_PKGCONFIG=1 -DOPENCV_ENABLE_NONFREE=1 -DWITH_VULKAN="$config_options" -DWITH_OPENMP=1 -DWITH_OPENCL=1 -DWITH_LAPACK=0" # BUILD_PACKAGE=0 to find already built package, otherwise builds from 3rdparty...
     do_ninja_and_ninja_install # WITH_LAPACK=1 requires blas be built with NOFORTRAN and frei0r cannot use opencv if WITH_LAPACK=1
-    sed -i.bak 's/-lopencv_core4130.*/& -lstdc++/' $PKG_CONFIG_PATH/opencv4.pc
+    sed -i.bak 's/-lopencv_core4140.*/& -lstdc++/' $PKG_CONFIG_PATH/opencv4.pc
     sed -i "s/-lpthread.*/-pthread -l:OpenCL.a/" $PKG_CONFIG_PATH/opencv4.pc
     sed -i "s/-I${includedir}.*/-I\${includedir} -fopenmp/" $PKG_CONFIG_PATH/opencv4.pc
   cd ..
@@ -1748,8 +1748,8 @@ build_librubberband() {
 }
 
 build_frei0r() {
-  download_and_unpack_file https://github.com/dyne/frei0r/archive/refs/tags/v3.5.0.tar.gz frei0r-3.5.0 
-  cd frei0r-3.5.0
+  download_and_unpack_file https://github.com/dyne/frei0r/archive/refs/tags/v3.7.0.tar.gz frei0r-3.7.0
+  cd frei0r-3.7.0
     sed -i.bak 's/-arch i386//' CMakeLists.txt # OS X https://github.com/dyne/frei0r/issues/64
     do_cmake "-B build -GNinja -DWITHOUT_OPENCV=0 -DWITHOUT_CAIRO=1 -DWITHOUT_GAVL=1 -DCMAKE_C_FLAGS="-mtune=generic"" # cannot handle opencv with lapack+openmp or some cpu specific flags
     do_ninja_and_ninja_install
@@ -1855,15 +1855,15 @@ build_zvbi() {
 }
 
 build_fribidi() {
-  download_and_unpack_file https://github.com/fribidi/fribidi/releases/download/v1.0.16/fribidi-1.0.16.tar.xz # Get c2man errors building from repo and targ.xz v1.0.17
-  cd fribidi-1.0.16
+  download_and_unpack_file https://github.com/fribidi/fribidi/releases/download/v1.0.18/fribidi-1.0.18.tar.xz # Get c2man errors building from repo and targ.xz v1.0.17
+  cd fribidi-1.0.18
     generic_configure "--disable-debug --disable-deprecated --disable-docs"
     do_make_and_make_install
   cd ..
 }
 
 build_libsrt() {
-  download_and_unpack_file https://github.com/Haivision/srt/archive/v1.5.7.tar.gz srt-1.5.7
+  download_and_unpack_file https://github.com/Haivision/srt/archive/refs/tags/v1.5.7.tar.gz srt-1.5.7
   cd srt-1.5.7
     if [[ $compiler_flavors != "native" ]]; then
       apply_patch file://$patch_dir/srt.app.patch -p1
@@ -1879,7 +1879,7 @@ build_libass() {
 
 build_vulkan() {
   build_spirv-headers
-  do_git_checkout https://github.com/KhronosGroup/Vulkan-Headers.git Vulkan-Headers_git v1.4.359
+  do_git_checkout https://github.com/KhronosGroup/Vulkan-Headers.git Vulkan-Headers_git v1.4.366
   cd Vulkan-Headers_git
     do_cmake_and_install "-DVULKAN_HEADERS_ENABLE_MODULE=NO -DVULKAN_HEADERS_ENABLE_TESTS=NO -DVULKAN_HEADERS_ENABLE_INSTALL=YES"
   cd ..
@@ -1888,13 +1888,13 @@ build_vulkan() {
 build_vulkan_loader() {
   do_git_checkout https://github.com/BtbN/Vulkan-Shim-Loader.git Vulkan-Shim-Loader_git 65b3936528cd92eb4ea3de485d03f858a3850484
   cd Vulkan-Shim-Loader_git # credit to btnb for most code for placebo and deps
-    # _git_checkout https://github.com/KhronosGroup/Vulkan-Headers.git Vulkan-Headers v1.4.359
+    # _git_checkout https://github.com/KhronosGroup/Vulkan-Headers.git Vulkan-Headers v1.4.366
     do_cmake_and_install "-DVULKAN_SHIM_IMPERSONATE=ON" # -DVULKAN_HEADERS_ENABLE_MODULE=NO -DVULKAN_HEADERS_ENABLE_TESTS=NO -DVULKAN_HEADERS_ENABLE_INSTALL=YES"
   cd ..
 }
 
 build_spirv-cross() {
-  do_git_checkout https://github.com/KhronosGroup/SPIRV-Cross.git SPIRV-Cross_git 9c3c8e2cefdd8194b193bb8ed2fdff4d5527e382
+  do_git_checkout https://github.com/KhronosGroup/SPIRV-Cross.git SPIRV-Cross_git 300681bbcb8365a8d1eacdacdbdd0249bbf1d6b1
   cd SPIRV-Cross_git
     do_cmake "-B build -GNinja -DSPIRV_CROSS_STATIC=ON -DSPIRV_CROSS_SHARED=OFF -DSPIRV_CROSS_CLI=OFF -DSPIRV_CROSS_ENABLE_TESTS=OFF -DSPIRV_CROSS_FORCE_PIC=ON -DSPIRV_CROSS_ENABLE_CPP=OFF"
     do_ninja_and_ninja_install
@@ -1951,7 +1951,7 @@ EOF
 }
 
 build_shaderc() {
-  do_git_checkout https://github.com/google/shaderc.git shaderc_git 7060a6615a1c6e2515e696651eea685524ecadb5
+  do_git_checkout https://github.com/google/shaderc.git shaderc_git 2737994b552137a85545f956e303d620e6ff232c
   cd shaderc_git
     ./utils/git-sync-deps
      do_cmake "-B build -GNinja -DSHADERC_SKIP_EXAMPLES=1 -DSHADERC_SKIP_TESTS=1 -DSPIRV_SKIP_TESTS=1 -DSHADERC_SKIP_COPYRIGHT_CHECK=1 -DENABLE_EXCEPTIONS=1\
@@ -1970,7 +1970,7 @@ build_shaderc() {
 }
 
 build_spirv-headers() {
-  do_git_checkout https://github.com/KhronosGroup/SPIRV-Headers.git spirv-headers_git f0bf307f7c49d26484db596185cece53c37701fc
+  do_git_checkout https://github.com/KhronosGroup/SPIRV-Headers.git spirv-headers_git fbf86836a9b1966586faf7be7bb8a6440e156d62
   cd spirv-headers_git
     do_cmake_and_install "-DSPIRV_HEADERS_ENABLE_TESTS=0 -DSPIRV_HEADERS_ENABLE_INSTALL=1"
   cd ..
@@ -1983,7 +1983,7 @@ build_libplacebo() {
   build_spirv-cross
   build_libdovi
   build_shaderc
-  do_git_checkout https://code.videolan.org/videolan/libplacebo.git libplacebo_git 22ee762e8e0890fc54068beb670310f0edce7263
+  do_git_checkout https://code.videolan.org/videolan/libplacebo.git libplacebo_git 275f7dea27924cdd34ab2e6c20e448b6bc4fab65
   activate_meson
   cd libplacebo_git
     git submodule update --init --recursive --depth=1 --filter=blob:none
@@ -2226,8 +2226,8 @@ EOF
 }
 
 build_libopenh264() {
-  download_and_unpack_file https://github.com/cisco/openh264/archive/refs/tags/v2.6.0.tar.gz openh264-2.6.0
-  cd openh264-2.6.0
+  download_and_unpack_file https://github.com/cisco/openh264/archive/refs/tags/v2.7.0.tar.gz openh264-2.7.0
+  cd openh264-2.7.0
     sed -i.bak "s/_M_X64/_M_DISABLED_X64/" codec/encoder/core/inc/param_svc.h # for 64 bit, avoid missing _set_FMA3_enable, it needed to link against msvcrt120 to get this or something weird?
     if [[ $bits_target == 32 ]]; then
       local arch=i686 # or x86?
@@ -2977,7 +2977,7 @@ build_ffmpeg_dependencies() {
     build_libvpl
   fi
   build_nv_headers
-  install_cudatoolkit # v13.3.0
+  install_cudatoolkit # v13.3.1
   build_libzimg # Uses dlfcn.
   build_libopenjpeg
   build_glew
@@ -2996,7 +2996,7 @@ build_ffmpeg_dependencies() {
   build_libidn2 # needs iconv and unistring
   build_zstd
   build_gnutls # Needs nettle >= 3.1, hogweed (nettle) >= 3.1. Uses libidn2, unistring, zlib, and dlfcn.
-  build_openssl-3.0.8
+  build_openssl-3.0.10
   build_curl
   build_libogg # Uses dlfcn.
   build_libvorbis # Needs libogg >= 1.0. Uses dlfcn.
