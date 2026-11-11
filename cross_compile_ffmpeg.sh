@@ -1278,7 +1278,7 @@ build_gmp() {
 build_libnettle() {
   download_and_unpack_file https://ftp.gnu.org/gnu/nettle/nettle-4.0.tar.gz
   cd nettle-4.0
-    generic_configure "--disable-openssl --disable-documentation --libdir=$x86_64_prefix/lib CFLAGS=-std=c18" # c18 needed to build
+    generic_configure "--disable- --disable-documentation --libdir=$x86_64_prefix/lib CFLAGS=-std=c18" # c18 needed to build
     do_make_and_make_install
   cd ..
 }
@@ -1295,7 +1295,7 @@ build_libidn2() {
   cd ..
 }
 
-build_openssl-3.0.8() {
+build_openssl-3.0.10() {
   download_and_unpack_file https://www.openssl.org/source/openssl-3.0.10.tar.gz openssl-3.0.10
   if [[ ! -f openssl-3.0.10/meson.build ]]; then
     wget https://wrapdb.mesonbuild.com/v2/openssl_3.0.10-1/get_patch
