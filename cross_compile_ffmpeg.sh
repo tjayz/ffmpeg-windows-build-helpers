@@ -1427,10 +1427,9 @@ build_mpg123() {
 }
 
 build_lame() {
-  do_svn_checkout https://svn.code.sf.net/p/lame/svn/trunk/lame lame_svn r6527 # r6531-r6528 fail https://sourceforge.net/p/lame/svn/6531/log/?path=/trunk
+  do_svn_checkout https://svn.code.sf.net/p/lame/svn/trunk/lame lame_svn r7153 # r6552
   cd lame_svn
-    generic_configure "--enable-nasm --enable-libmpg123"
-    do_make_and_make_install
+    generic_configure_make_install
     sed -i.bak 's/-lmp3lame.*/-lmp3lame\nLibs.private: -lm -lmpg123 -lshlwapi/' $PKG_CONFIG_PATH/lame.pc
   cd ..
 }
